@@ -2,7 +2,7 @@
 Initializes the database connection and schema for the app.
 */
 
-import { outputsTable, profilesTable, purchasesTable, rawOutputsTable, tempCartsTable } from "@/db/schema"
+import { outputsTable, profilesTable, purchasesTable, rawOutputsTable, scrapedDataTable, tempCartsTable } from "@/db/schema"
 import { config } from "dotenv"
 import { drizzle } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
@@ -14,7 +14,8 @@ const schema = {
   purchases: purchasesTable,
   outputs: outputsTable,
   rawOutputs: rawOutputsTable,
-  tempCarts: tempCartsTable
+  tempCarts: tempCartsTable,
+  scrapedData: scrapedDataTable
 }
 
 const client = postgres(process.env.DATABASE_URL!)

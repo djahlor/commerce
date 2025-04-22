@@ -54,15 +54,15 @@
     - **Files**: `db/schema/scraped-data-schema.ts`, `db/schema/index.ts`
     - **User Instructions**: Follow the schema design from the Tech Spec (v2.1). Run `npx drizzle-kit generate` then `npx drizzle-kit migrate` after creating the schema.
     - **Step Dependencies**: Steps 3, 9
-- [ ]  **Step 10: Implement DB Actions for Purchases & Outputs**
+- [x]  **Step 10: Implement DB Actions for Purchases & Outputs**
     - **Task**: Create server actions (`actions/db/purchases-actions.ts`, `actions/db/outputs-actions.ts`) for CRUD operations on `purchases` and `outputs` tables using Drizzle and the `ActionState` pattern. Include functions like `createPurchaseAction`, `updatePurchaseStatusAction` (with extended status values for scraping), `createOutputAction`, `getUserOutputsAction`.
     - **Files**: `actions/db/purchases-actions.ts`, `actions/db/outputs-actions.ts`, `lib/types.ts`
     - **Step Dependencies**: Steps 4, 9
-- [ ]  **Step 10.1: Implement DB Actions for Scraped Data**
+- [x]  **Step 10.1: Implement DB Actions for Scraped Data**
     - **Task**: Create server actions (`actions/db/scraped-data-actions.ts`) for managing the `scraped_data` table. Include functions like `createScrapedDataAction`, `getScrapedDataByPurchaseId`, `updateScrapedDataStatusAction`.
     - **Files**: `actions/db/scraped-data-actions.ts`
     - **Step Dependencies**: Steps 4, 9.1
-- [ ]  **Step 11: Implement DB Actions for Profiles**
+- [x]  **Step 11: Implement DB Actions for Profiles**
     - **Task**: Adapt/create server actions (`actions/db/profiles-actions.ts`) for managing the `profiles` table (linking `clerkUserId` to `email`, creating profile on first login). Use `o1-pro` actions as a reference.
     - **Files**: `actions/db/profiles-actions.ts`
     - **Step Dependencies**: Steps 4, 9

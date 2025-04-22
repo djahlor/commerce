@@ -1,9 +1,9 @@
 import OpengraphImage from 'components/opengraph-image';
-import { getPage } from 'lib/shopify';
 
+// Temporary replacement for removed Shopify functionality
 export default async function Image({ params }: { params: { page: string } }) {
-  const page = await getPage(params.page);
-  const title = page.seo?.title || page.title;
+  // Use page parameter directly as title 
+  const title = params.page.charAt(0).toUpperCase() + params.page.slice(1).replace(/-/g, ' ');
 
   return await OpengraphImage({ title });
 }
