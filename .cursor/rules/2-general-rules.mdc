@@ -1,9 +1,4 @@
 ---
-description: 
-globs: 
-alwaysApply: false
----
----
 description: General coding conventions, imports, naming, env vars, and types.
 globs: ["**/*.ts", "**/*.tsx"]
 alwaysApply: true
@@ -36,13 +31,19 @@ alwaysApply: true
 ## TypeScript & Types
 
 - Write all code in **strict TypeScript**.
-- Define shared types in `lib/types.ts` and export them from there.
-- Prefer `interfaces` over `type` aliases for object shapes where possible, but use `type` for unions, intersections, or simpler types.
-- Use Drizzle's inferred types (`SelectPurchase`, `InsertPurchase`) when interacting with the database via actions. Import these directly from the schema files (`@/db/schema/*`).
-- Use the `ActionState<T>` type (defined in `lib/types.ts`) as the return type for all Server Actions.
+- Define shared types in the `types/` directory:
+  - Use kebab-case for type files (e.g., `server-action-types.ts`, `cart-types.ts`).
+  - Export specific types from their dedicated files (e.g., `types/server-action-types.ts`).
+  - Export all types through `types/index.ts`.
+- Use the `ActionState<T>` type from `types/server-action-types.ts` as the return type for all Server Actions.
   ```typescript
-  // lib/types.ts
-  export type ActionState<T> =
-    | { isSuccess: true; message: string; data: T }
-    | { isSuccess: false; message: string; data?: never }
-- Use explicit types; avoid any wherever possible.
+  // types/server-action-types.ts
+  export type ActionState<T> = {
+    isSuccess: boolean;
+    message?: string;
+    data?: T;
+  };
+  ```
+- Use Drizzle's inferred types (`SelectPurchase`, `InsertPurchase`) when interacting with the database via actions. Import these directly from the schema files (`@/db/schema/*`).
+- Prefer `interfaces` over `type` aliases for object shapes where possible, but use `type` for unions, intersections, or simpler types.
+- Use explicit types; avoid any wherever possible. 

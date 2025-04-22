@@ -106,4 +106,36 @@ export async function getUserOutputsAction(): Promise<ActionState<Array<(typeof 
       message: "An unexpected error occurred. Please try again later."
     };
   }
+}
+
+/**
+ * Gets an output by its ID
+ */
+export async function getOutputByIdAction(
+  outputId: string
+): Promise<ActionState<typeof outputsTable.$inferSelect>> {
+  try {
+    const output = await db.query.outputs.findFirst({
+      where: eq(outputsTable.id, outputId)
+    });
+
+    if (!output) {
+      return {
+        isSuccess: false,
+        message: "Output not found"
+      };
+    }
+
+    return {
+      isSuccess: true,
+      message: "Output retrieved successfully",
+      data: output
+    };
+  } catch (error) {
+    console.error('Error in getOutputByIdAction:', error);
+    return {
+      isSuccess: false,
+      message: "An unexpected error occurred. Please try again later."
+    };
+  }
 } 

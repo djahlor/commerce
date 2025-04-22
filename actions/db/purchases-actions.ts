@@ -16,7 +16,7 @@ export async function createPurchaseAction(
     amount: number;
     url: string;
     tier: string;
-    status?: "processing" | "completed" | "failed";
+    status?: "processing" | "pending_scrape" | "scrape_complete" | "completed" | "scrape_failed" | "generation_failed" | "failed";
     clerkUserId?: string;
   }
 ): Promise<ActionState<typeof purchasesTable.$inferSelect>> {
@@ -64,7 +64,7 @@ export async function createPurchaseAction(
  */
 export async function updatePurchaseStatusAction(
   purchaseId: string,
-  status: "processing" | "completed" | "failed"
+  status: "processing" | "pending_scrape" | "scrape_complete" | "completed" | "scrape_failed" | "generation_failed" | "failed"
 ): Promise<ActionState<typeof purchasesTable.$inferSelect>> {
   try {
     const [purchase] = await db
@@ -124,6 +124,70 @@ export async function getUserPurchasesAction(): Promise<ActionState<Array<typeof
     };
   } catch (error) {
     console.error('Error in getUserPurchasesAction:', error);
+    return {
+      isSuccess: false,
+      message: "An unexpected error occurred. Please try again later."
+    };
+  }
+}
+
+/**
+ * Gets a purchase by its ID
+ */
+export async function getPurchaseByIdAction(
+  purchaseId: string
+): Promise<ActionState<typeof purchasesTable.$inferSelect>> {
+  try {
+    const purchase = await db.query.purchases.findFirst({
+      where: eq(purchasesTable.id, purchaseId)
+    });
+
+    if (!purchase) {
+      return {
+        isSuccess: false,
+        message: "Purchase not found"
+      };
+    }
+
+    return {
+      isSuccess: true,
+      message: "Purchase retrieved successfully",
+      data: purchase
+    };
+  } catch (error) {
+    console.error('Error in getPurchaseByIdAction:', error);
+    return {
+      isSuccess: false,
+      message: "An unexpected error occurred. Please try again later."
+    };
+  }
+}
+
+/**
+ * Gets a purchase by Polar order ID
+ */
+export async function getPurchaseByOrderIdAction(
+  polarOrderId: string
+): Promise<ActionState<typeof purchasesTable.$inferSelect>> {
+  try {
+    const purchase = await db.query.purchases.findFirst({
+      where: eq(purchasesTable.polarOrderId, polarOrderId)
+    });
+
+    if (!purchase) {
+      return {
+        isSuccess: false,
+        message: "Purchase not found"
+      };
+    }
+
+    return {
+      isSuccess: true,
+      message: "Purchase retrieved successfully",
+      data: purchase
+    };
+  } catch (error) {
+    console.error('Error in getPurchaseByOrderIdAction:', error);
     return {
       isSuccess: false,
       message: "An unexpected error occurred. Please try again later."

@@ -49,7 +49,7 @@
     - **Files**: `db/schema/*.ts`, `drizzle.config.ts`
     - **User Instructions**: Run `npx drizzle-kit generate` then `npx drizzle-kit migrate`. Verify schema in Supabase UI.
     - **Step Dependencies**: Step 3
-- [ ]  **Step 9.1: Define Scraped Data Schema**
+- [x]  **Step 9.1: Define Scraped Data Schema**
     - **Task**: Create the `scraped_data` schema in Drizzle to store data extracted from customer websites. Include fields for storing URL, scraped content (jsonb), content type, status, and error messages.
     - **Files**: `db/schema/scraped-data-schema.ts`, `db/schema/index.ts`
     - **User Instructions**: Follow the schema design from the Tech Spec (v2.1). Run `npx drizzle-kit generate` then `npx drizzle-kit migrate` after creating the schema.

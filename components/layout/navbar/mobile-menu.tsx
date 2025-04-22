@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Fragment, useEffect, useState } from 'react';
 
-import { Menu } from '@/lib/types';
+import { Menu } from '@/types';
 import Search from './search';
 
 export default function MobileMenu({ menu }: { menu: Menu[] }) {

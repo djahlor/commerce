@@ -1,18 +1,7 @@
-/**
- * @deprecated Import types from '@/types' instead
- * This file is kept for backward compatibility and will be removed in the future
- */
+/*
+Contains commerce-related types (product, cart, collection, etc.)
+*/
 
-export * from '@/types';
-
-// Server Action Types
-export type ActionState<T> = {
-  isSuccess: boolean;
-  message?: string;
-  data?: T;
-};
-
-// Temporary Product/Cart Types (Replacing Shopify)
 export type Money = {
   amount: string;
   currencyCode: string;
