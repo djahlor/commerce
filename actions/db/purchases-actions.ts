@@ -16,24 +16,34 @@ export async function createPurchaseAction(
     amount: number;
     url: string;
     tier: string;
-    status?: string;
+    status?: "processing" | "completed" | "failed";
     clerkUserId?: string;
   }
 ): Promise<ActionState<typeof purchasesTable.$inferSelect>> {
   try {
     // Get authenticated user ID if available
-    const { userId } = auth();
-    const clerkUserId = data.clerkUserId || userId;
+    const session = await auth();
+    const clerkUserId = data.clerkUserId || session.userId;
     
     const [purchase] = await db
       .insert(purchasesTable)
       .values({
-        ...data,
-        clerkUserId,
+        polarOrderId: data.polarOrderId,
         customerEmail: data.email,
-        status: data.status || 'processing'
+        amount: data.amount,
+        url: data.url,
+        tier: data.tier,
+        clerkUserId: clerkUserId,
+        status: (data.status as any) || "processing"
       })
       .returning();
+
+    if (!purchase) {
+      return {
+        isSuccess: false,
+        message: "Failed to create purchase record"
+      };
+    }
 
     return {
       isSuccess: true,
@@ -54,13 +64,13 @@ export async function createPurchaseAction(
  */
 export async function updatePurchaseStatusAction(
   purchaseId: string,
-  status: string
+  status: "processing" | "completed" | "failed"
 ): Promise<ActionState<typeof purchasesTable.$inferSelect>> {
   try {
     const [purchase] = await db
       .update(purchasesTable)
       .set({
-        status,
+        status: status,
         updatedAt: new Date()
       })
       .where(eq(purchasesTable.id, purchaseId))
@@ -92,7 +102,8 @@ export async function updatePurchaseStatusAction(
  */
 export async function getUserPurchasesAction(): Promise<ActionState<Array<typeof purchasesTable.$inferSelect>>> {
   try {
-    const { userId } = auth();
+    const session = await auth();
+    const userId = session.userId;
     
     if (!userId) {
       return {
@@ -101,9 +112,9 @@ export async function getUserPurchasesAction(): Promise<ActionState<Array<typeof
       };
     }
 
-    const purchases = await db.query.purchasesTable.findMany({
+    const purchases = await db.query.purchases.findMany({
       where: eq(purchasesTable.clerkUserId, userId),
-      orderBy: (purchases, { desc }) => [desc(purchases.createdAt)]
+      orderBy: (purchases: any, { desc }: { desc: any }) => [desc(purchases.createdAt)]
     });
 
     return {

@@ -1,51 +1,34 @@
-import { ReadonlyURLSearchParams } from 'next/navigation';
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
 
-export const baseUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
-  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-  : 'http://localhost:3000';
+/**
+ * Combines multiple class names into a single string, using clsx for conditional logic and twMerge to handle Tailwind conflicts.
+ */
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
 
-export const createUrl = (
-  pathname: string,
-  params: URLSearchParams | ReadonlyURLSearchParams
-) => {
-  const paramsString = params.toString();
-  const queryString = `${paramsString.length ? '?' : ''}${paramsString}`;
+/**
+ * Base URL for the application, used for SEO and generating absolute URLs
+ */
+export const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
+  ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+  : "http://localhost:3000"
 
-  return `${pathname}${queryString}`;
-};
+/**
+ * Ensures a string starts with a given prefix.
+ */
+export function ensureStartsWith(str: string, prefix: string) {
+  return str.startsWith(prefix) ? str : `${prefix}${str}`
+}
 
-export const ensureStartsWith = (stringToCheck: string, startsWith: string) =>
-  stringToCheck.startsWith(startsWith)
-    ? stringToCheck
-    : `${startsWith}${stringToCheck}`;
-
-export const validateEnvironmentVariables = () => {
-  const requiredEnvironmentVariables = [
-    'SHOPIFY_STORE_DOMAIN',
-    'SHOPIFY_STOREFRONT_ACCESS_TOKEN'
-  ];
-  const missingEnvironmentVariables = [] as string[];
-
-  requiredEnvironmentVariables.forEach((envVar) => {
-    if (!process.env[envVar]) {
-      missingEnvironmentVariables.push(envVar);
-    }
-  });
-
-  if (missingEnvironmentVariables.length) {
-    throw new Error(
-      `The following environment variables are missing. Your site will not work without them. Read more: https://vercel.com/docs/integrations/shopify#configure-environment-variables\n\n${missingEnvironmentVariables.join(
-        '\n'
-      )}\n`
-    );
-  }
-
-  if (
-    process.env.SHOPIFY_STORE_DOMAIN?.includes('[') ||
-    process.env.SHOPIFY_STORE_DOMAIN?.includes(']')
-  ) {
-    throw new Error(
-      'Your `SHOPIFY_STORE_DOMAIN` environment variable includes brackets (ie. `[` and / or `]`). Your site will not work with them there. Please remove them.'
-    );
-  }
-};
+/**
+ * Creates a URL with search params.
+ */
+export function createUrl(pathname: string, params: URLSearchParams | Record<string, string> = {}) {
+  const paramsString = params instanceof URLSearchParams 
+    ? params.toString()
+    : new URLSearchParams(params).toString()
+  
+  return `${pathname}${paramsString ? `?${paramsString}` : ''}`
+}

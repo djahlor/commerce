@@ -14,17 +14,17 @@
     - **User Instructions**: Ensure Supabase project is created. Run `npx drizzle-kit generate` then `npx drizzle-kit migrate` (or `push`).
     - **Step Dependencies**: Steps 1, 2
     - **Mitigation**: Ensure Drizzle setup doesn't conflict with any existing Next.js Commerce DB assumptions (it likely won't, as Shopify was the DB).
-- [ ]  **Step 4: Integrate `o1-pro` Server Actions Structure**
+- [x]  **Step 4: Integrate `o1-pro` Server Actions Structure**
     - **Task**: Create the `actions/` directory. Copy the `ActionState` type definition from `o1-pro` (`types/server-action-types.ts`) into a suitable location (e.g., `lib/types.ts`). Establish subdirectories like `actions/db/`, `actions/polar/`, etc.
     - **Files**: `actions/` (directory), `lib/types.ts` (or similar)
     - **Step Dependencies**: Step 1
-- [ ]  **Step 5: Integrate Shadcn UI & `o1-pro` Styling Foundation**
-    - **Task**: Run `npx shadcn-ui@latest init` in the project root. Configure `components.json` similarly to `o1-pro` (aliases for `components`, `lib`, `hooks`). Manually merge Tailwind theme settings (`colors`, `borderRadius`, `keyframes`/`animation` for Shadcn) from `o1-pro`'s `tailwind.config.ts` into the Next.js Commerce `tailwind.config.ts`. Merge relevant base styles/variables from `o1-pro`'s `globals.css` into the project's `globals.css`. Install core Shadcn components needed early (`button`, `input`, `form`, `label`, `toast`, `card`).
+- [x]  **Step 5: Integrate Shadcn UI & `o1-pro` Styling Foundation**
+    - **Task**: Run `pnpm dlx shadcn@latest init` in the project root. Configure `components.json` similarly to `o1-pro` (aliases for `components`, `lib`, `hooks`). Manually merge Tailwind theme settings (`colors`, `borderRadius`, `keyframes`/`animation` for Shadcn) from `o1-pro`'s `tailwind.config.ts` into the Next.js Commerce `tailwind.config.ts`. Merge relevant base styles/variables from `o1-pro`'s `globals.css` into the project's `globals.css`. Install core Shadcn components needed early (`button`, `input`, `form`, `label`, `toast`, `card`).
     - **Files**: `components.json`, `tailwind.config.ts` (merge), `app/globals.css` (merge), `postcss.config.mjs` (ensure required plugins listed).
     - **User Instructions**: Carefully merge Tailwind configs and global CSS to avoid breaking Next.js Commerce styles while adding Shadcn support. Run `npx shadcn-ui@latest add button input form label toast card`.
     - **Step Dependencies**: Step 1
     - **Mitigation**: Test basic UI rendering after merge to ensure styles apply correctly. Conflicts in Tailwind config are likely.
-- [ ]  **Step 6: Integrate `o1-pro` Utilities & Hooks**
+- [x]  **Step 6: Integrate `o1-pro` Utilities & Hooks**
     - **Task**: Copy useful hooks (`useToast`, `useIsMobile`, `useCopyToClipboard`) and utilities (`cn`, potentially `ThemeSwitcher`, `TailwindIndicator`) from `o1-pro`'s `lib/hooks/`, `lib/utils.ts`, `components/utilities/` into the project's `lib/` and `components/` structure. Adapt imports as needed.
     - **Files**: `lib/utils.ts` (merge `cn`), `lib/hooks/`, `components/utilities/`
     - **Step Dependencies**: Step 1, 5

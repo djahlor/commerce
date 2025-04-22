@@ -20,6 +20,13 @@ export async function createRawOutputAction(
       .insert(rawOutputsTable)
       .values(data)
       .returning();
+      
+    if (!rawOutput) {
+      return {
+        isSuccess: false,
+        message: "Failed to create raw output record"
+      };
+    }
 
     return {
       isSuccess: true,
@@ -42,7 +49,7 @@ export async function getRawOutputAction(
   id: string
 ): Promise<ActionState<typeof rawOutputsTable.$inferSelect>> {
   try {
-    const rawOutput = await db.query.rawOutputsTable.findFirst({
+    const rawOutput = await db.query.rawOutputs.findFirst({
       where: eq(rawOutputsTable.id, id)
     });
 
@@ -74,9 +81,9 @@ export async function getPurchaseRawOutputsAction(
   purchaseId: string
 ): Promise<ActionState<Array<typeof rawOutputsTable.$inferSelect>>> {
   try {
-    const rawOutputs = await db.query.rawOutputsTable.findMany({
+    const rawOutputs = await db.query.rawOutputs.findMany({
       where: eq(rawOutputsTable.purchaseId, purchaseId),
-      orderBy: (rawOutputs, { desc }) => [desc(rawOutputs.createdAt)]
+      orderBy: (rawOutputs: any, { desc }: { desc: any }) => [desc(rawOutputs.createdAt)]
     });
 
     return {

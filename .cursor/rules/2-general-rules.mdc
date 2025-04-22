@@ -11,6 +11,9 @@ alwaysApply: true
 
 # General Coding Rules
 
+## Run 
+- we use pnpm 
+
 ## Imports
 
 - Use `@/` path aliases for all internal imports (e.g., `@/components/ui/button`, `@/actions/db/purchases-actions`). Configure aliases in `tsconfig.json` and `components.json`.

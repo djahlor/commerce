@@ -24,6 +24,13 @@ export async function createOutputAction(
       .values(data)
       .returning();
 
+    if (!output) {
+      return {
+        isSuccess: false,
+        message: "Failed to create output record"
+      };
+    }
+
     return {
       isSuccess: true,
       message: "Output created successfully",
@@ -45,9 +52,9 @@ export async function getPurchaseOutputsAction(
   purchaseId: string
 ): Promise<ActionState<Array<typeof outputsTable.$inferSelect>>> {
   try {
-    const outputs = await db.query.outputsTable.findMany({
+    const outputs = await db.query.outputs.findMany({
       where: eq(outputsTable.purchaseId, purchaseId),
-      orderBy: (outputs, { asc }) => [asc(outputs.type)]
+      orderBy: (outputs: any, { asc }: { asc: any }) => [asc(outputs.type)]
     });
 
     return {
@@ -69,7 +76,8 @@ export async function getPurchaseOutputsAction(
  */
 export async function getUserOutputsAction(): Promise<ActionState<Array<(typeof outputsTable.$inferSelect & { purchase: typeof purchasesTable.$inferSelect })>>> {
   try {
-    const { userId } = auth();
+    const session = await auth();
+    const userId = session.userId;
     
     if (!userId) {
       return {
@@ -79,7 +87,7 @@ export async function getUserOutputsAction(): Promise<ActionState<Array<(typeof 
     }
 
     // Join with purchases to filter by user
-    const outputs = await db.query.outputsTable.findMany({
+    const outputs = await db.query.outputs.findMany({
       with: {
         purchase: true
       },
