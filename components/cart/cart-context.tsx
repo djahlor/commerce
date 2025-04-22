@@ -1,11 +1,80 @@
 'use client';
 
-import type {
-  Cart,
-  CartItem,
-  Product,
-  ProductVariant
-} from 'lib/shopify/types';
+// Shopify types removed in Step 8 - will be replaced with custom types
+// import type {
+//   Cart,
+//   CartItem,
+//   Product,
+//   ProductVariant
+// } from 'lib/shopify/types';
+
+// Temporary type definitions until we implement our own types
+type Money = {
+  amount: string;
+  currencyCode: string;
+};
+
+type Image = {
+  url: string;
+  altText: string;
+  width: number;
+  height: number;
+};
+
+type CartProduct = {
+  id: string;
+  handle: string;
+  title: string;
+  featuredImage: Image;
+};
+
+type CartItem = {
+  id: string | undefined;
+  quantity: number;
+  cost: {
+    totalAmount: Money;
+  };
+  merchandise: {
+    id: string;
+    title: string;
+    selectedOptions: {
+      name: string;
+      value: string;
+    }[];
+    product: CartProduct;
+  };
+};
+
+type ProductVariant = {
+  id: string;
+  title: string;
+  availableForSale: boolean;
+  selectedOptions: {
+    name: string;
+    value: string;
+  }[];
+  price: Money;
+};
+
+type Product = {
+  id: string;
+  handle: string;
+  title: string;
+  featuredImage: Image;
+};
+
+type Cart = {
+  id: string | undefined;
+  checkoutUrl: string;
+  totalQuantity: number;
+  lines: CartItem[];
+  cost: {
+    subtotalAmount: Money;
+    totalAmount: Money;
+    totalTaxAmount: Money;
+  };
+};
+
 import React, {
   createContext,
   use,

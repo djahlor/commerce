@@ -6,7 +6,8 @@ import { CartProvider } from 'components/cart/cart-context';
 import { Navbar } from 'components/layout/navbar';
 import { WelcomeToast } from 'components/welcome-toast';
 import { GeistSans } from 'geist/font/sans';
-import { getCart } from 'lib/shopify';
+// Shopify import removed in Step 8 - will be replaced with local state management
+// import { getCart } from 'lib/shopify';
 import { baseUrl } from 'lib/utils';
 import { ReactNode } from 'react';
 import { Toaster } from 'sonner';
@@ -26,13 +27,30 @@ export const metadata = {
   }
 };
 
+// Temporary function to replace getCart until we implement local state
+const getDummyCart = () => {
+  return Promise.resolve({
+    id: undefined,
+    checkoutUrl: '',
+    totalQuantity: 0,
+    lines: [],
+    cost: {
+      subtotalAmount: { amount: '0', currencyCode: 'USD' },
+      totalAmount: { amount: '0', currencyCode: 'USD' },
+      totalTaxAmount: { amount: '0', currencyCode: 'USD' }
+    }
+  });
+};
+
 export default async function RootLayout({
   children
 }: {
   children: ReactNode;
 }) {
   // Don't await the fetch, pass the Promise to the context provider
-  const cart = getCart();
+  // Shopify cart retrieval removed in Step 8
+  // const cart = getCart();
+  const cart = getDummyCart();
 
   return (
     <html lang="en" className={GeistSans.variable}>

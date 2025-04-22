@@ -1,16 +1,13 @@
 'use server';
 
-import { TAGS } from 'lib/constants';
-import {
-  addToCart,
-  createCart,
-  getCart,
-  removeFromCart,
-  updateCart
-} from 'lib/shopify';
-import { revalidateTag } from 'next/cache';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
+// Shopify imports removed in Step 8 - will be replaced with local state management
+// import {
+//   addToCart,
+//   createCart,
+//   getCart,
+//   removeFromCart,
+//   updateCart
+// } from 'lib/shopify';
 
 export async function addItem(
   prevState: any,
@@ -20,35 +17,41 @@ export async function addItem(
     return 'Error adding item to cart';
   }
 
-  try {
-    await addToCart([{ merchandiseId: selectedVariantId, quantity: 1 }]);
-    revalidateTag(TAGS.cart);
-  } catch (e) {
-    return 'Error adding item to cart';
-  }
+  // Removed in Step 8 - will be replaced with local state updates
+  // try {
+  //   await addToCart([{ merchandiseId: selectedVariantId, quantity: 1 }]);
+  //   revalidateTag(TAGS.cart);
+  // } catch (e) {
+  //   return 'Error adding item to cart';
+  // }
+  
+  return 'Feature removed temporarily - will be replaced with local state management';
 }
 
 export async function removeItem(prevState: any, merchandiseId: string) {
-  try {
-    const cart = await getCart();
+  // Removed in Step 8 - will be replaced with local state updates
+  // try {
+  //   const cart = await getCart();
 
-    if (!cart) {
-      return 'Error fetching cart';
-    }
+  //   if (!cart) {
+  //     return 'Error fetching cart';
+  //   }
 
-    const lineItem = cart.lines.find(
-      (line) => line.merchandise.id === merchandiseId
-    );
+  //   const lineItem = cart.lines.find(
+  //     (line) => line.merchandise.id === merchandiseId
+  //   );
 
-    if (lineItem && lineItem.id) {
-      await removeFromCart([lineItem.id]);
-      revalidateTag(TAGS.cart);
-    } else {
-      return 'Item not found in cart';
-    }
-  } catch (e) {
-    return 'Error removing item from cart';
-  }
+  //   if (lineItem && lineItem.id) {
+  //     await removeFromCart([lineItem.id]);
+  //     revalidateTag(TAGS.cart);
+  //   } else {
+  //     return 'Item not found in cart';
+  //   }
+  // } catch (e) {
+  //   return 'Error removing item from cart';
+  // }
+  
+  return 'Feature removed temporarily - will be replaced with local state management';
 }
 
 export async function updateItemQuantity(
@@ -60,47 +63,56 @@ export async function updateItemQuantity(
 ) {
   const { merchandiseId, quantity } = payload;
 
-  try {
-    const cart = await getCart();
+  // Removed in Step 8 - will be replaced with local state updates
+  // try {
+  //   const cart = await getCart();
 
-    if (!cart) {
-      return 'Error fetching cart';
-    }
+  //   if (!cart) {
+  //     return 'Error fetching cart';
+  //   }
 
-    const lineItem = cart.lines.find(
-      (line) => line.merchandise.id === merchandiseId
-    );
+  //   const lineItem = cart.lines.find(
+  //     (line) => line.merchandise.id === merchandiseId
+  //   );
 
-    if (lineItem && lineItem.id) {
-      if (quantity === 0) {
-        await removeFromCart([lineItem.id]);
-      } else {
-        await updateCart([
-          {
-            id: lineItem.id,
-            merchandiseId,
-            quantity
-          }
-        ]);
-      }
-    } else if (quantity > 0) {
-      // If the item doesn't exist in the cart and quantity > 0, add it
-      await addToCart([{ merchandiseId, quantity }]);
-    }
+  //   if (lineItem && lineItem.id) {
+  //     if (quantity === 0) {
+  //       await removeFromCart([lineItem.id]);
+  //     } else {
+  //       await updateCart([
+  //         {
+  //           id: lineItem.id,
+  //           merchandiseId,
+  //           quantity
+  //         }
+  //       ]);
+  //     }
+  //   } else if (quantity > 0) {
+  //     // If the item doesn't exist in the cart and quantity > 0, add it
+  //     await addToCart([{ merchandiseId, quantity }]);
+  //   }
 
-    revalidateTag(TAGS.cart);
-  } catch (e) {
-    console.error(e);
-    return 'Error updating item quantity';
-  }
+  //   revalidateTag(TAGS.cart);
+  // } catch (e) {
+  //   console.error(e);
+  //   return 'Error updating item quantity';
+  // }
+  
+  return 'Feature removed temporarily - will be replaced with local state management';
 }
 
 export async function redirectToCheckout() {
-  let cart = await getCart();
-  redirect(cart!.checkoutUrl);
+  // Removed in Step 8 - will be replaced with Polar.sh checkout
+  // let cart = await getCart();
+  // redirect(cart!.checkoutUrl);
+  
+  return 'Feature removed temporarily - will be replaced with Polar.sh checkout';
 }
 
 export async function createCartAndSetCookie() {
-  let cart = await createCart();
-  (await cookies()).set('cartId', cart.id!);
+  // Removed in Step 8 - will be replaced with local state initialization
+  // let cart = await createCart();
+  // (await cookies()).set('cartId', cart.id!);
+  
+  // This function will be reimplemented with local state management
 }

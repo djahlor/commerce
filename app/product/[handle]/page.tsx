@@ -7,21 +7,139 @@ import { Gallery } from 'components/product/gallery';
 import { ProductProvider } from 'components/product/product-context';
 import { ProductDescription } from 'components/product/product-description';
 import { HIDDEN_PRODUCT_TAG } from 'lib/constants';
-import { getProduct, getProductRecommendations } from 'lib/shopify';
-import { Image } from 'lib/shopify/types';
+// Shopify imports removed in Step 8 - will be replaced with Polar/Supabase/local config
+// import { getProduct, getProductRecommendations } from 'lib/shopify';
+// import { Image } from 'lib/shopify/types';
 import Link from 'next/link';
 import { Suspense } from 'react';
+
+// Temporary type definition until we implement our own
+type Image = {
+  url: string;
+  altText: string;
+  width?: number;
+  height?: number;
+};
+
+// Temporary mock product data until we implement Polar/Supabase integration
+const getMockProduct = async (handle: string) => {
+  // This will be replaced with actual product data from Polar/Supabase
+  return {
+    id: 'mock-product-id',
+    handle,
+    title: 'E-Com Edge Kit',
+    description: 'Comprehensive analysis toolkit for your e-commerce store',
+    descriptionHtml: '<p>Comprehensive analysis toolkit for your e-commerce store</p>',
+    featuredImage: {
+      url: 'https://placehold.co/600x400',
+      altText: 'E-Com Edge Kit',
+      width: 600,
+      height: 400
+    },
+    images: [
+      {
+        url: 'https://placehold.co/600x400',
+        altText: 'E-Com Edge Kit',
+        width: 600,
+        height: 400
+      }
+    ],
+    priceRange: {
+      minVariantPrice: {
+        amount: '149.00',
+        currencyCode: 'USD'
+      },
+      maxVariantPrice: {
+        amount: '149.00',
+        currencyCode: 'USD'
+      }
+    },
+    seo: {
+      title: 'E-Com Edge Kit - Save Your Store',
+      description: 'AI-generated insights to help your e-commerce business thrive'
+    },
+    tags: [],
+    availableForSale: true,
+    variants: {
+      edges: [
+        {
+          node: {
+            id: 'mock-variant-id',
+            title: 'Default',
+            availableForSale: true,
+            selectedOptions: [
+              {
+                name: 'Title',
+                value: 'Default'
+              }
+            ],
+            price: {
+              amount: '149.00',
+              currencyCode: 'USD'
+            }
+          }
+        }
+      ]
+    },
+    options: [
+      {
+        id: 'option-1',
+        name: 'Title',
+        values: ['Default']
+      }
+    ]
+  };
+};
+
+// Temporary mock for product recommendations until we implement our own logic
+const getMockProductRecommendations = async () => {
+  // This will be replaced with actual related products
+  return [
+    {
+      id: 'mock-related-1',
+      handle: 'competitor-kill-matrix',
+      title: 'Competitor Kill Matrix',
+      featuredImage: {
+        url: 'https://placehold.co/600x400',
+        altText: 'Competitor Kill Matrix'
+      },
+      priceRange: {
+        maxVariantPrice: {
+          amount: '199.00',
+          currencyCode: 'USD'
+        }
+      }
+    },
+    {
+      id: 'mock-related-2',
+      handle: 'threat-scanner',
+      title: 'Threat Scanner',
+      featuredImage: {
+        url: 'https://placehold.co/600x400',
+        altText: 'Threat Scanner'
+      },
+      priceRange: {
+        maxVariantPrice: {
+          amount: '99.00',
+          currencyCode: 'USD'
+        }
+      }
+    }
+  ];
+};
 
 export async function generateMetadata(props: {
   params: Promise<{ handle: string }>;
 }): Promise<Metadata> {
   const params = await props.params;
-  const product = await getProduct(params.handle);
+  // Shopify call replaced with mock in Step 8
+  // const product = await getProduct(params.handle);
+  const product = await getMockProduct(params.handle);
 
   if (!product) return notFound();
 
   const { url, width, height, altText: alt } = product.featuredImage || {};
-  const indexable = !product.tags.includes(HIDDEN_PRODUCT_TAG);
+  const indexable = !product.tags.includes(HIDDEN_PRODUCT_TAG as never);
 
   return {
     title: product.seo.title || product.title,
@@ -51,7 +169,9 @@ export async function generateMetadata(props: {
 
 export default async function ProductPage(props: { params: Promise<{ handle: string }> }) {
   const params = await props.params;
-  const product = await getProduct(params.handle);
+  // Shopify call replaced with mock in Step 8
+  // const product = await getProduct(params.handle);
+  const product = await getMockProduct(params.handle);
 
   if (!product) return notFound();
 
@@ -111,7 +231,9 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
 }
 
 async function RelatedProducts({ id }: { id: string }) {
-  const relatedProducts = await getProductRecommendations(id);
+  // Shopify call replaced with mock in Step 8
+  // const relatedProducts = await getProductRecommendations(id);
+  const relatedProducts = await getMockProductRecommendations();
 
   if (!relatedProducts.length) return null;
 

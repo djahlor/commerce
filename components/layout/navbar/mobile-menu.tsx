@@ -1,13 +1,13 @@
 'use client';
 
 import { Dialog, Transition } from '@headlessui/react';
+import { MenuIcon, XIcon } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Fragment, Suspense, useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { Menu } from 'lib/shopify/types';
-import Search, { SearchSkeleton } from './search';
+import { Menu } from '@/lib/types';
+import Search from './search';
 
 export default function MobileMenu({ menu }: { menu: Menu[] }) {
   const pathname = usePathname();
@@ -24,7 +24,7 @@ export default function MobileMenu({ menu }: { menu: Menu[] }) {
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [isOpen]);
+  }, []);
 
   useEffect(() => {
     setIsOpen(false);
@@ -35,9 +35,9 @@ export default function MobileMenu({ menu }: { menu: Menu[] }) {
       <button
         onClick={openMobileMenu}
         aria-label="Open mobile menu"
-        className="flex h-11 w-11 items-center justify-center rounded-md border border-neutral-200 text-black transition-colors md:hidden dark:border-neutral-700 dark:text-white"
+        className="flex h-11 w-11 items-center justify-center rounded-md border border-neutral-200 text-black transition-colors dark:border-neutral-700 dark:text-white md:hidden"
       >
-        <Bars3Icon className="h-4" />
+        <MenuIcon className="h-4" />
       </button>
       <Transition show={isOpen}>
         <Dialog onClose={closeMobileMenu} className="relative z-50">
@@ -68,13 +68,11 @@ export default function MobileMenu({ menu }: { menu: Menu[] }) {
                   onClick={closeMobileMenu}
                   aria-label="Close mobile menu"
                 >
-                  <XMarkIcon className="h-6" />
+                  <XIcon className="h-4" />
                 </button>
 
                 <div className="mb-4 w-full">
-                  <Suspense fallback={<SearchSkeleton />}>
-                    <Search />
-                  </Suspense>
+                  <Search />
                 </div>
                 {menu.length ? (
                   <ul className="flex w-full flex-col">
@@ -83,7 +81,11 @@ export default function MobileMenu({ menu }: { menu: Menu[] }) {
                         className="py-2 text-xl text-black transition-colors hover:text-neutral-500 dark:text-white"
                         key={item.title}
                       >
-                        <Link href={item.path} prefetch={true} onClick={closeMobileMenu}>
+                        <Link
+                          href={item.path}
+                          onClick={closeMobileMenu}
+                          className="py-2 text-xl text-black transition-colors hover:text-neutral-500 dark:text-white"
+                        >
                           {item.title}
                         </Link>
                       </li>

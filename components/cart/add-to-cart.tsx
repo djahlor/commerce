@@ -4,7 +4,9 @@ import { PlusIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import { addItem } from 'components/cart/actions';
 import { useProduct } from 'components/product/product-context';
-import { Product, ProductVariant } from 'lib/shopify/types';
+// Shopify imports removed in Step 8 - will be replaced with custom types
+// import { Product, ProductVariant } from 'lib/shopify/types';
+import { Product, ProductVariant } from 'lib/types';
 import { useActionState } from 'react';
 import { useCart } from './cart-context';
 
@@ -63,22 +65,41 @@ export function AddToCart({ product }: { product: Product }) {
   const { state } = useProduct();
   const [message, formAction] = useActionState(addItem, null);
 
-  const variant = variants.find((variant: ProductVariant) =>
+  // Handle different variants structure
+  const productVariants = Array.isArray(variants) 
+    ? variants 
+    : variants.edges.map(edge => edge.node);
+
+  const variant = productVariants.find((variant: ProductVariant) =>
     variant.selectedOptions.every(
       (option) => option.value === state[option.name.toLowerCase()]
     )
   );
-  const defaultVariantId = variants.length === 1 ? variants[0]?.id : undefined;
+  const defaultVariantId = productVariants.length === 1 ? productVariants[0]?.id : undefined;
   const selectedVariantId = variant?.id || defaultVariantId;
   const addItemAction = formAction.bind(null, selectedVariantId);
-  const finalVariant = variants.find(
+  const finalVariant = productVariants.find(
     (variant) => variant.id === selectedVariantId
   )!;
+
+  // Prepare a compatible product object for the cart context
+  const cartProduct = {
+    id: product.id,
+    handle: product.handle,
+    title: product.title,
+    featuredImage: {
+      ...product.featuredImage,
+      // Ensure width and height are numbers for cart compatibility
+      width: product.featuredImage.width || 0,
+      height: product.featuredImage.height || 0
+    }
+  };
 
   return (
     <form
       action={async () => {
-        addCartItem(finalVariant, product);
+        // Use the compatible product object instead of the original product
+        addCartItem(finalVariant, cartProduct);
         addItemAction();
       }}
     >

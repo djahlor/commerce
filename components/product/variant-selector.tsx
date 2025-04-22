@@ -2,7 +2,16 @@
 
 import clsx from 'clsx';
 import { useProduct, useUpdateURL } from 'components/product/product-context';
-import { ProductOption, ProductVariant } from 'lib/shopify/types';
+// Shopify imports removed in Step 8 - will be replaced with custom types
+// import { ProductOption, ProductVariant } from 'lib/shopify/types';
+import { ProductVariant } from 'lib/types';
+
+// Temporary type definition until we implement our own
+type ProductOption = {
+  id: string;
+  name: string;
+  values: string[];
+};
 
 type Combination = {
   id: string;

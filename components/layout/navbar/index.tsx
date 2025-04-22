@@ -1,16 +1,30 @@
 import CartModal from 'components/cart/modal';
 import LogoSquare from 'components/logo-square';
-import { getMenu } from 'lib/shopify';
-import { Menu } from 'lib/shopify/types';
+// Shopify imports removed in Step 8 - will be replaced with local config
+// import { getMenu } from 'lib/shopify';
+// import { Menu } from 'lib/shopify/types';
+import { Menu } from 'lib/types';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import MobileMenu from './mobile-menu';
 import Search, { SearchSkeleton } from './search';
 
+// Mock function to replace getMenu until we implement our own data source
+async function getMockMenu(handle: string): Promise<Menu[]> {
+  // This will be replaced with actual menu data from local config or database
+  return [
+    { title: 'Home', path: '/' },
+    { title: 'Products', path: '/search' },
+    { title: 'About', path: '/about' }
+  ];
+}
+
 const { SITE_NAME } = process.env;
 
 export async function Navbar() {
-  const menu = await getMenu('next-js-frontend-header-menu');
+  // Shopify call replaced with mock in Step 8
+  // const menu = await getMenu('next-js-frontend-header-menu');
+  const menu = await getMockMenu('next-js-frontend-header-menu');
 
   return (
     <nav className="relative flex items-center justify-between p-4 lg:px-6">

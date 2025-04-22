@@ -28,11 +28,11 @@
     - **Task**: Copy useful hooks (`useToast`, `useIsMobile`, `useCopyToClipboard`) and utilities (`cn`, potentially `ThemeSwitcher`, `TailwindIndicator`) from `o1-pro`'s `lib/hooks/`, `lib/utils.ts`, `components/utilities/` into the project's `lib/` and `components/` structure. Adapt imports as needed.
     - **Files**: `lib/utils.ts` (merge `cn`), `lib/hooks/`, `components/utilities/`
     - **Step Dependencies**: Step 1, 5
-- [ ]  **Step 7: Integrate Clerk Provider & Basic Setup**
+- [x]  **Step 7: Integrate Clerk Provider & Basic Setup**
     - **Task**: Wrap the root layout (`app/layout.tsx`) with `<ClerkProvider>`. Add necessary Clerk env vars to `.env.local`. Configure basic Clerk appearance if desired (e.g., dark theme support using `next-themes` from `o1-pro` utilities).
     - **Files**: `app/layout.tsx`, `.env.local`
     - **Step Dependencies**: Steps 1, 2
-- [ ]  **Step 8: Initial Code Cleanup (Shopify Removal - Phase 1)**
+- [x]  **Step 8: Initial Code Cleanup (Shopify Removal - Phase 1)**
     - **Task**: Delete the `lib/shopify/` directory. Search the codebase for imports from `lib/shopify` and remove/comment out the code sections that directly use them (expect errors). Remove Shopify-specific env vars from `.env.example`. This is just the initial rip-out; fixing errors comes later.
     - **Files**: `lib/shopify/` (delete), Various files using Shopify imports. `.env.example`.
     - **Step Dependencies**: Step 1

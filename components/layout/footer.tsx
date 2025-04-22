@@ -2,8 +2,22 @@ import Link from 'next/link';
 
 import FooterMenu from 'components/layout/footer-menu';
 import LogoSquare from 'components/logo-square';
-import { getMenu } from 'lib/shopify';
+// Shopify imports removed in Step 8 - will be replaced with local config
+// import { getMenu } from 'lib/shopify';
+import { Menu } from 'lib/types';
 import { Suspense } from 'react';
+
+// Mock function to replace getMenu until we implement our own data source
+async function getMockMenu(handle: string): Promise<Menu[]> {
+  // This will be replaced with actual menu data from local config or database
+  return [
+    { title: 'Home', path: '/' },
+    { title: 'About', path: '/about' },
+    { title: 'Terms & Conditions', path: '/terms' },
+    { title: 'Privacy Policy', path: '/privacy' },
+    { title: 'FAQ', path: '/faq' }
+  ];
+}
 
 const { COMPANY_NAME, SITE_NAME } = process.env;
 
@@ -11,7 +25,9 @@ export default async function Footer() {
   const currentYear = new Date().getFullYear();
   const copyrightDate = 2023 + (currentYear > 2023 ? `-${currentYear}` : '');
   const skeleton = 'w-full h-6 animate-pulse rounded-sm bg-neutral-200 dark:bg-neutral-700';
-  const menu = await getMenu('next-js-frontend-footer-menu');
+  // Shopify call replaced with mock in Step 8
+  // const menu = await getMenu('next-js-frontend-footer-menu');
+  const menu = await getMockMenu('next-js-frontend-footer-menu');
   const copyrightName = COMPANY_NAME || SITE_NAME || '';
 
   return (
