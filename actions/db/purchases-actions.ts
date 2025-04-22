@@ -30,7 +30,8 @@ export async function createPurchaseAction(
       .values({
         ...data,
         clerkUserId,
-        status: data.status || 'pending'
+        customerEmail: data.email,
+        status: data.status || 'processing'
       })
       .returning();
 

@@ -7,7 +7,7 @@ export async function uploadPdfStorage(
   pdfBuffer: Buffer,
   fileName: string,
   purchaseId: string
-): Promise<ActionState<{ path: string }>> {
+): Promise<ActionState<{ filePath: string }>> {
   try {
     // This is a placeholder.
     // In Step 12 we'll implement the actual storage upload logic
@@ -22,7 +22,7 @@ export async function uploadPdfStorage(
       isSuccess: true,
       data: {
         // Placeholder path until actual implementation
-        path: `pdfs/${purchaseId}/${fileName}`
+        filePath: `pdfs/${purchaseId}/${fileName}`
       }
     };
   } catch (error) {
@@ -36,12 +36,12 @@ export async function uploadPdfStorage(
 }
 
 export async function getSignedUrlAction(
-  path: string
+  filePath: string
 ): Promise<ActionState<{ url: string }>> {
   try {
     // This is a placeholder.
     // In Step 12 we'll implement the actual signed URL generation
-    console.log('Generating signed URL for:', path);
+    console.log('Generating signed URL for:', filePath);
     
     // Here we would:
     // 1. Connect to Supabase storage
@@ -51,7 +51,7 @@ export async function getSignedUrlAction(
       isSuccess: true,
       data: {
         // Placeholder URL until actual implementation
-        url: `https://example.com/download/${path}?token=placeholder`
+        url: `https://example.com/download/${filePath}?token=placeholder`
       }
     };
   } catch (error) {

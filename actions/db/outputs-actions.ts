@@ -14,7 +14,7 @@ export async function createOutputAction(
   data: {
     purchaseId: string;
     type: string;
-    path: string;
+    filePath: string;
     rawOutputId?: string;
   }
 ): Promise<ActionState<typeof outputsTable.$inferSelect>> {

@@ -21,7 +21,7 @@ export async function getCurrentProfileAction(): Promise<ActionState<typeof prof
     }
 
     const profile = await db.query.profilesTable.findFirst({
-      where: eq(profilesTable.clerkUserId, userId)
+      where: eq(profilesTable.userId, userId)
     });
 
     return {
@@ -54,7 +54,7 @@ export async function upsertProfileAction(email: string): Promise<ActionState<ty
 
     // Check if profile exists
     const existingProfile = await db.query.profilesTable.findFirst({
-      where: eq(profilesTable.clerkUserId, userId)
+      where: eq(profilesTable.userId, userId)
     });
 
     if (existingProfile) {
@@ -62,7 +62,7 @@ export async function upsertProfileAction(email: string): Promise<ActionState<ty
       const [updatedProfile] = await db
         .update(profilesTable)
         .set({ email, updatedAt: new Date() })
-        .where(eq(profilesTable.clerkUserId, userId))
+        .where(eq(profilesTable.userId, userId))
         .returning();
 
       return {
@@ -74,7 +74,7 @@ export async function upsertProfileAction(email: string): Promise<ActionState<ty
       const [newProfile] = await db
         .insert(profilesTable)
         .values({
-          clerkUserId: userId,
+          userId,
           email
         })
         .returning();
