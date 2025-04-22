@@ -5,11 +5,19 @@ Defines the database schema for purchases.
 import { integer, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core"
 import { profilesTable } from "./profiles-schema"
 
-export const purchaseStatusEnum = pgEnum("purchase_status", ["processing", "completed", "failed"])
+export const purchaseStatusEnum = pgEnum("purchase_status", [
+  "processing", 
+  "pending_scrape", 
+  "scrape_complete", 
+  "completed", 
+  "scrape_failed", 
+  "generation_failed",
+  "failed" // Kept original failed for broader errors
+])
 
 export const purchasesTable = pgTable("purchases", {
   id: uuid("id").defaultRandom().primaryKey(),
-  clerkUserId: text("clerk_user_id").references(() => profilesTable.id, { onDelete: "set null" }), // Linked post-purchase/login
+  clerkUserId: text("clerk_user_id").references(() => profilesTable.userId, { onDelete: "set null" }), // Linked post-purchase/login
   polarOrderId: text("polar_order_id").notNull().unique(),
   customerEmail: text("customer_email").notNull(), // From Polar Order
   tier: text("tier").notNull(), // "base", "full-stack", "upsell-competitor", etc.

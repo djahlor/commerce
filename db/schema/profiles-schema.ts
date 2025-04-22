@@ -5,7 +5,7 @@ Defines the database schema for profiles.
 import { pgTable, text, timestamp } from "drizzle-orm/pg-core"
 
 export const profilesTable = pgTable("profiles", {
-  id: text("id").primaryKey().notNull(), // Clerk user ID
+  userId: text("user_id").primaryKey().notNull(), // Clerk user ID
   email: text("email").notNull().unique(), // User's email
   firstName: text("first_name"),
   lastName: text("last_name"),

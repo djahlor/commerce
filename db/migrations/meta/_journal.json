@@ -15,6 +15,20 @@
       "when": 1745336445278,
       "tag": "0001_dizzy_lord_tyger",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1745347970619,
+      "tag": "0002_tranquil_fallen_one",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1745349078147,
+      "tag": "0003_young_wither",
+      "breakpoints": true
     }
   ]
 }
