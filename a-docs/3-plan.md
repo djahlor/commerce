@@ -66,7 +66,7 @@
     - **Task**: Adapt/create server actions (`actions/db/profiles-actions.ts`) for managing the `profiles` table (linking `clerkUserId` to `email`, creating profile on first login). Use `o1-pro` actions as a reference.
     - **Files**: `actions/db/profiles-actions.ts`
     - **Step Dependencies**: Steps 4, 9
-- [ ]  **Step 12: Implement Firecrawl Integration**
+- [x]  **Step 12: Implement Firecrawl Integration**
     - **Task**: Set up Firecrawl client (`lib/firecrawl.ts`). Create server actions (`actions/scrape-actions.ts`) for scraping websites using Firecrawl. Implement `triggerScrapeAction` that accepts URL and purchaseId, extracts website data, and saves it to the `scraped_data` table.
     - **Files**: `lib/firecrawl.ts`, `actions/scrape-actions.ts`
     - **User Instructions**: Ensure Firecrawl API key is properly set in environment variables. Test with various e-commerce website types.
