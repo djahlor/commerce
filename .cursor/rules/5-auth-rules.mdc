@@ -1,0 +1,58 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: Rules specific to authentication using Clerk.
+globs: ["app/(auth)/**/*.tsx", "middleware.ts", "actions/clerk-actions.ts", "actions/db/profiles-actions.ts"]
+alwaysApply: true
+---
+
+# Authentication Rules (Clerk)
+
+## Provider
+
+- Use **Clerk (`@clerk/nextjs`)** as the sole authentication provider.
+
+## Scope
+
+- Clerk authentication is primarily used to protect the custom user dashboard section located at `/dashboard/**`.
+- The main purchase flow (marketing pages, product page, cart, Polar checkout) **does not** require the user to be logged in via Clerk. Users can purchase as guests.
+
+## Setup & Configuration
+
+- Wrap the root layout (`app/layout.tsx`) with `<ClerkProvider>`.
+- Configure required Clerk environment variables (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`) in `.env.local`.
+- Use Clerk components for UI:
+    - `<UserButton />` in the site header for signed-in users.
+    - `<SignIn />` and `<SignUp />` components on dedicated auth pages (`app/(auth)/login/`, `app/(auth)/signup/`) styled appropriately (e.g., using `appearance` prop with `@clerk/themes`).
+    - `<SignedIn>` and `<SignedOut>` components to conditionally render UI based on auth state.
+
+## Middleware & Route Protection
+
+- Implement `middleware.ts` at the project root using `clerkMiddleware` and `createRouteMatcher`.
+- Configure the `isProtectedRoute` matcher to target `/dashboard/(.*)`.
+- Ensure the middleware redirects unauthenticated users attempting to access protected routes to the `/login` page (or Clerk's hosted pages if preferred).
+
+## User Linking (Clerk <-> Supabase)
+
+- **Goal:** Associate a Clerk `userId` with the `purchases` made by that user (identified by email from Polar order).
+- **Mechanism:**
+    - Use the `profiles` table in Supabase (schema in `db/schema/profiles-schema.ts`) to store the mapping between `clerkUserId` and `email`.
+    - When a Polar webhook successfully creates a `purchases` record, store the `customerEmail`. The `clerkUserId` field will initially be NULL.
+    - When a user logs into the dashboard (`/dashboard`) for the first time after making a purchase:
+        1. Get the authenticated `clerkUserId` and user's primary `email` from Clerk (`auth()` or client-side `useUser()`).
+        2. Call a server action (`linkClerkUserAction` in `actions/clerk-actions.ts`).
+        3. This action should:
+           - Check if a `profiles` record exists for this `clerkUserId`. If not, create one using the email from Clerk.
+           - Find all `purchases` records matching the user's `email` where `clerkUserId` is currently NULL.
+           - Update those `purchases` records to set the `clerkUserId` field.
+- **Trigger:** The linking action is best triggered client-side within the dashboard layout (`app/(auth)/dashboard/layout.tsx`) using `useEffect` after ensuring the user is loaded via Clerk's hooks (`useUser`). Check if linking is needed (e.g., by fetching profile data or a flag) before calling the action.
+
+## Accessing Auth State
+
+- **Server-Side (RSCs, Server Actions, API Routes):** Use `const { userId } = await auth()` from `@clerk/nextjs/server`. Check if `userId` exists.
+- **Client-Side:** Use Clerk's hooks like `useUser()`, `useAuth()`, `useSession()` within Client Components (`"use client"`). Use `<SignedIn>`/`<SignedOut>` for conditional rendering.
+
+---

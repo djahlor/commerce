@@ -1,0 +1,78 @@
+---
+description: Rules for backend logic using Server Actions, Drizzle, and service integrations (Polar, AI, PDF).
+globs: ["actions/**/*.ts", "db/**/*.ts", "lib/*.ts", "app/api/**/*.ts"]
+alwaysApply: true
+---
+
+# Backend Development Rules
+
+## Server Actions
+
+- **Primary Backend Interface:** Use Server Actions (`actions/*`) for almost all backend logic triggered by the frontend (CRUD operations, checkout initiation, AI triggers).
+- **Organization:** Structure actions logically within the `actions/` directory (e.g., `actions/db/`, `actions/polar/`, `actions/pdf/`).
+- **Naming:** Suffix action functions with `Action` (e.g., `createPurchaseAction`).
+- **Return Type:** ALWAYS return a `Promise<ActionState<T>>` from `lib/types.ts`. Ensure `T` matches the expected data type, use `void` if no data is returned on success.
+- **Error Handling:** Implement `try...catch` blocks within actions. Catch specific errors where possible. Return `{ isSuccess: false, message: "..." }` on failure. Log detailed errors server-side.
+- **Input Validation:** Validate input data (e.g., using Zod) at the beginning of server actions where appropriate, especially for complex inputs.
+- **Authentication:** Use `auth()` from `@clerk/nextjs/server` at the start of actions requiring authentication to get `userId`. Check for `userId` and throw/return error if not authenticated.
+
+## Database (Supabase + Drizzle)
+
+- **Schema:** Define tables in `db/schema/*.ts`. Export types (`Select...`, `Insert...`) and the table definition. Add table to `db/db.ts` schema object. Follow schema guidelines:
+    - Use `pgTable`.
+    - Include `id` (usually `uuid().defaultRandom().primaryKey()`).
+    - Include `createdAt` (`timestamp().defaultNow().notNull()`).
+    - Include `updatedAt` (`timestamp().defaultNow().notNull().$onUpdate(() => new Date())`).
+    - Use `text("clerk_user_id")` for Clerk user IDs. Link via foreign keys where appropriate (`references(() => profilesTable.clerkUserId)`).
+    - Use `pgEnum` for defined choice columns (e.g., `status`).
+    - Add `.notNull()` where required.
+    - Define relationships (`references(...)`) with `onDelete: "cascade"` or `"set null"` as appropriate.
+- **Client:** Use the Drizzle client instance exported from `db/db.ts`.
+- **Queries/Mutations:** Perform DB operations within Server Actions (`actions/db/*`). Use Drizzle query builder syntax (`db.query...`, `db.insert...`, `db.update...`, `db.delete...`). Use operators like `eq()`, `and()`, `or()` from `drizzle-orm`.
+- **Migrations:** Generate migrations using `npx drizzle-kit generate`. Apply migrations using `npx drizzle-kit migrate`. **DO NOT** manually edit files in `db/migrations`.
+
+## Payments & Orders (Polar.sh)
+
+- **SDK:** Use the official Polar SDK (`@polar.sh/sdk` or similar) initialized in `lib/polar/index.ts`.
+- **Checkout:** Implement `createPolarCheckoutAction` (`actions/polar/polar-actions.ts`) to:
+    - Read local cart state.
+    - Call `polar.checkouts.create`.
+    - Pass `line_items` correctly.
+    - Pass `metadata` containing the `url` (or `tempCartId` if using workaround).
+    - Specify `success_url` pointing back to `/success`.
+    - Return the `checkout_url`.
+- **Webhooks:** Implement the handler in `app/api/webhooks/polar/route.ts`:
+    - Verify signature using `polar.webhooks.constructEvent`.
+    - Handle `order.succeeded` event type primarily.
+    - Parse payload to get order details, customer email, metadata.
+    - Ensure idempotency (check if `polarOrderId` exists in `purchases` table before processing).
+    - Trigger downstream actions (DB write, PDF generation) reliably. Respond 200 OK quickly.
+- **Data Sync:** Save relevant order information (Polar Order ID, customer email, amount, status, URL) to the Supabase `purchases` table upon successful webhook processing.
+
+## Email (Resend)
+
+- **SDK:** Use the Resend SDK (`resend`) initialized in `lib/resend.ts`.
+- **Template Structure:** Define email templates (confirmation, download links) as React components if using React templates, or as HTML strings.
+- **Action:** Implement `sendDownloadEmailAction` in `actions/email-actions.ts` to:
+  - Accept parameters like recipient email, download URLs, customer name.
+  - Generate appropriate email content with links to the dashboard or direct download links.
+  - Call Resend API to send the email.
+  - Handle errors and return appropriate `ActionState`.
+- **Testing:** Use Resend's test mode during development to avoid sending real emails.
+- **Environment Variables:** Configure `RESEND_API_KEY` and `EMAIL_FROM` in .env.local.
+
+## AI & PDF Generation Flow
+
+- **Trigger:** Initiated by the Polar webhook handler after successful payment.
+- **Orchestration Action:** `generatePDFAction` in `actions/pdf-actions.ts`.
+- **Input:** Requires `purchaseId` (from Supabase), `url` (from purchase record), `tier` (to determine which PDFs to generate).
+- **AI Client:** Use configured client from `lib/ai.ts` (e.g., OpenAI).
+- **PDF Client:** Use configured library from `lib/pdf.ts` (e.g., `pdfkit`).
+- **Storage:** Use `uploadPdfStorage` action (`actions/storage/pdf-storage-actions.ts`) to save the generated PDF to Supabase Storage.
+- **DB Updates:**
+    - Call `createOutputAction` to record the generated PDF metadata (type, path) in the `outputs` table, linking to the `purchaseId`.
+    - Call `updatePurchaseStatusAction` to set the `purchases` record status to 'completed' or 'failed'.
+- **Notifications:** Call `sendDownloadEmailAction` on success.
+- **Error Handling/Retry:** Implement retry logic within `generatePDFAction` for transient AI/PDF errors. Update purchase status on persistent failure. Consider queueing for long processes.
+
+---

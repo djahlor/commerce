@@ -1,0 +1,81 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: Core project setup, tech stack, and file structure conventions.
+globs: *
+alwaysApply: true
+---
+
+# E-Com Edge Kit Project Setup & Architecture
+
+## Project Goal & Overview
+
+- **Goal:** Build a premium web platform selling AI-generated digital PDF kits (e.g., "Survival Blueprint") to e-commerce owners.
+- **Core Flow:** User inputs website URL -> Purchases Kit via Polar.sh -> Polar webhook triggers AI analysis -> PDF generated & stored in Supabase -> User accesses PDF via email link or custom Clerk-authenticated dashboard.
+- **Architecture:** Hybrid approach using Next.js Commerce starter kit for UI/cart structure, Polar.sh for payments/orders, Supabase for DB/Storage, Clerk for dashboard auth, and integrating patterns/components from `o1-pro`.
+
+## Tech Stack
+
+- **Framework:** Next.js 14+ (App Router) - Based on Vercel Commerce Starter Kit
+- **Language:** TypeScript (Strict)
+- **Styling:** Tailwind CSS
+- **UI Library:** Shadcn UI (Integrated based on `o1-pro` setup; use for all new custom UI)
+- **Component Reuse:** Adapt Next.js Commerce components; style using Tailwind/Shadcn.
+- **State Management (Cart):** Local Client-Side State ([Specify Library: e.g., Zustand]) - **DO NOT USE SHOPIFY STATE**
+- **State Management (Server):** Next.js Server Actions
+- **Database:** Supabase (Postgres)
+- **ORM:** Drizzle ORM (Setup based on `o1-pro`)
+- **Storage:** Supabase Storage (for generated PDFs)
+- **Payments/Orders:** Polar.sh (SDK, Webhooks, Merchant of Record) - **REPLACES SHOPIFY BACKEND**
+- **Authentication:** Clerk (`@clerk/nextjs`) - **Scoped to `/dashboard` ONLY**
+- **AI Service:** OpenAI API (or specified alternative)
+- **Email:** SendGrid API
+- **PDF Generation:** pdfkit (or specified alternative library)
+- **Deployment:** Vercel
+
+## Project Structure (Hybrid)
+
+- **`actions/`**: Server Actions (following `o1-pro` structure)
+  - `db/`: Database actions (Supabase via Drizzle)
+  - `polar/`: Polar related actions (checkout creation)
+  - `pdf/`: PDF generation orchestration
+  - `storage/`: Supabase Storage actions
+  - `clerk/`: Clerk related actions (user linking)
+  - `email/`: SendGrid actions
+- **`app/`**: Next.js App Router (from Commerce Kit base)
+  - `api/webhooks/polar/`: Polar webhook handler **ONLY**.
+  - `(marketing)/`: Public marketing pages (landing, product display - adapt Commerce Kit pages).
+  - `(auth)/`: Clerk-protected routes & auth pages.
+    - `dashboard/`: Custom user dashboard.
+      - `_components/`: Dashboard-specific components.
+    - `login/`, `signup/`: Clerk auth pages (style like `o1-pro`).
+    - `success/`: Custom post-Polar checkout success page.
+  - `product/[handle]/`: Product display page (heavily customized from Commerce Kit).
+- **`components/`**: Reusable components.
+  - `ui/`: Shadcn UI components (installed/managed via CLI).
+  - `cart/`: **Adapted** Commerce Kit cart components (local state).
+  - `product/`: Custom product-related components (e.g., `url-input.tsx`).
+  - `dashboard/`: Custom dashboard components.
+  - `landing/`: Custom landing page sections (can adapt from `o1-pro`).
+  - `utilities/`: General utility components (ThemeSwitcher, etc. - from `o1-pro`).
+- **`db/`**: Database setup (from `o1-pro`)
+  - `schema/`: Drizzle schemas (`profiles`, `purchases`, `outputs`).
+  - `migrations/`: Drizzle migrations (managed by `drizzle-kit`).
+  - `db.ts`: Drizzle client instance.
+- **`lib/`**: Library code.
+  - `polar/`: Polar SDK setup.
+  - `supabase/`: Supabase client setup.
+  - `clerk/`: Clerk helpers.
+  - `drizzle/`: Drizzle instance (if not in `db/db.ts`).
+  - `ai/`, `pdf/`, `sendgrid/`: Service clients/helpers.
+  - `store/`: Local cart state management (e.g., Zustand store).
+  - `hooks/`: Custom hooks (adapted from `o1-pro`).
+  - `types.ts`: Shared type definitions (including `ActionState`).
+  - `utils.ts`: Utility functions (`cn`, validation).
+- **`public/`**: Static assets.
+- **Root Files**: `middleware.ts` (Clerk), `tailwind.config.ts`, `next.config.mjs`, `drizzle.config.ts`, `components.json`, `.env.local`, `.env.example`.
+
+---

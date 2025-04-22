@@ -1,0 +1,45 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: General coding conventions, imports, naming, env vars, and types.
+globs: ["**/*.ts", "**/*.tsx"]
+alwaysApply: true
+---
+
+# General Coding Rules
+
+## Imports
+
+- Use `@/` path aliases for all internal imports (e.g., `@/components/ui/button`, `@/actions/db/purchases-actions`). Configure aliases in `tsconfig.json` and `components.json`.
+
+## Naming Conventions
+
+- Use **kebab-case** for all files and folders (e.g., `purchases-actions.ts`, `app/(auth)/dashboard/`). Exception: Next.js dynamic routes (`[handle]`).
+- Use **PascalCase** for React components (e.g., `ProductCard`, `UrlInput`).
+- Use **camelCase** for functions, variables, hooks (e.g., `createPurchaseAction`, `useCartStore`).
+- Suffix Server Actions with `Action` (e.g., `createPurchaseAction`).
+- Suffix Supabase Storage actions with `Storage` (e.g., `uploadPdfStorage`).
+
+## Environment Variables
+
+- Define ALL required env vars in `.env.example` with placeholder values.
+- Use actual secrets ONLY in `.env.local` (or Vercel environment variables). **NEVER commit `.env.local`**.
+- Access backend env vars directly using `process.env.VARIABLE_NAME` in server-side code (Server Components, Server Actions, API Routes).
+- **DO NOT** expose backend secrets (API keys, DB connection strings) to the frontend. Prefix with `NEXT_PUBLIC_` ONLY if explicitly needed client-side (e.g., Clerk Publishable Key).
+
+## TypeScript & Types
+
+- Write all code in **strict TypeScript**.
+- Define shared types in `lib/types.ts` and export them from there.
+- Prefer `interfaces` over `type` aliases for object shapes where possible, but use `type` for unions, intersections, or simpler types.
+- Use Drizzle's inferred types (`SelectPurchase`, `InsertPurchase`) when interacting with the database via actions. Import these directly from the schema files (`@/db/schema/*`).
+- Use the `ActionState<T>` type (defined in `lib/types.ts`) as the return type for all Server Actions.
+  ```typescript
+  // lib/types.ts
+  export type ActionState<T> =
+    | { isSuccess: true; message: string; data: T }
+    | { isSuccess: false; message: string; data?: never }
+- Use explicit types; avoid any wherever possible.

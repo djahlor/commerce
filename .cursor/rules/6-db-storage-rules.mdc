@@ -1,0 +1,40 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: Rules for interacting with Supabase Database (Drizzle) and Supabase Storage.
+globs: ["db/**/*.ts", "actions/db/**/*.ts", "actions/storage/**/*.ts"]
+alwaysApply: true
+---
+
+# Database & Storage Rules (Supabase)
+
+## Database (Supabase Postgres via Drizzle ORM)
+
+- **Schema:** Defined in `db/schema/*.ts`. Follow guidelines in `backend-rules.mdc`.
+- **Client:** Use shared instance from `db/db.ts`.
+- **Migrations:** Use `drizzle-kit`.
+- **Operations:** Perform all DB operations via Server Actions in `actions/db/`. Use Drizzle query syntax. Return `ActionState<T>`.
+- **Relationships:** Ensure foreign key relationships (`purchases` <-> `profiles`, `outputs` <-> `purchases`) are correctly defined with appropriate `onDelete` behavior.
+
+## Storage (Supabase Storage)
+
+- **Purpose:** Used exclusively for storing the generated PDF output files.
+- **Bucket:** Define a dedicated bucket name in environment variables (e.g., `process.env.SUPABASE_PDF_BUCKET`). Do not hardcode the name. Set bucket policy (likely **private**).
+    - **User Instruction:** Create the bucket in Supabase Studio and set its policy to private.
+- **File Structure:** Organize PDFs logically, typically including user/purchase context in the path:
+    - Pattern: `{bucketName}/{clerkUserId}/{purchaseId}/{outputType}-{timestamp}.pdf`
+    - Example: `ecom-edge-pdfs/user_abc123/purchase_xyz789/survival-blueprint-1678886400000.pdf`
+    - Generate unique and descriptive filenames within actions.
+- **Storage Actions (`actions/storage/*.ts`):**
+    - `uploadPdfStorage`: Action to upload a generated PDF `File` or `Buffer` to the specified path in the bucket. Use Supabase client's `.storage.from(...).upload(...)`. Set `contentType: 'application/pdf'` and consider `upsert: false` unless overwriting is intended. Return `ActionState<{ path: string }>`.
+    - `getSignedUrlAction`: Action to generate a short-lived signed URL for downloading a private PDF file. Takes the file path as input. Use Supabase client's `.storage.from(...).createSignedUrl(...)`. Return `ActionState<{ signedUrl: string }>`. Use this for download links on success page / dashboard.
+    - `deletePdfStorage` (Optional): Action to delete a PDF file if needed.
+- **Security (RLS):** Since access is primarily through Server Actions generating signed URLs, complex RLS might not be strictly necessary on the *storage bucket itself* if the bucket is private. However, ensure the *Server Actions* generating signed URLs properly verify user ownership (e.g., check if the `clerkUserId` associated with the requested `purchaseId` matches the authenticated user). If direct client interaction with storage were planned (it's not recommended here), RLS would be critical.
+    - **Recommendation:** Keep bucket private, generate signed URLs server-side with ownership checks.
+- **Error Handling:** Wrap Supabase storage calls in `try...catch` within actions. Handle errors like file-not-found, permission errors, upload failures. Return appropriate `ActionState`.
+- **Optimization:** Uploads happen server-side via actions, so progressive upload isn't typically handled at this layer. Ensure actions are efficient.
+
+---

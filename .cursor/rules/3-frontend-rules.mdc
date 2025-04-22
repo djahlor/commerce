@@ -1,0 +1,50 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: Rules for Next.js frontend development, components, styling, and state management.
+globs: ["app/**/*.tsx", "components/**/*.tsx", "lib/hooks/**/*.ts", "lib/store/**/*.ts"]
+alwaysApply: true
+---
+
+# Frontend Development Rules
+
+## Component Model (Next.js App Router)
+
+- **Default to React Server Components (RSCs):** Build components as RSCs (`"use server"` or no directive) whenever possible. Fetch data directly within RSCs.
+- **Use Client Components Sparingly:** Add `"use client"` directive ONLY when necessary for:
+  - Event listeners (e.g., `onClick`, `onChange`).
+  - State and Lifecycle hooks (`useState`, `useEffect`, `useContext`, `useReducer`, custom hooks using these).
+  - Browser-only APIs (e.g., `localStorage`).
+  - Using libraries that depend on client-side hooks/context (e.g., Zustand, Framer Motion).
+- **Component Composition:** Pass Server Components as `children` props to Client Components to keep server logic isolated where possible.
+- **Suspense:** Use `<Suspense fallback={<Skeleton />}>` boundaries around components that perform async data fetching within RSCs to handle loading states gracefully. No Suspense needed if the RSC itself doesn't fetch data directly.
+- **Params:** In server pages, `await` the `params` prop if accessing dynamic route segments (e.g., `const { handle } = await props.params`).
+
+## Data Fetching & Mutations
+
+- **RSC Data Fetching:** Perform initial data fetching directly within Server Components (e.g., fetching outputs for the dashboard page).
+- **Client-Triggered Operations:** Use **Server Actions** (`actions/*`) for all data fetching or mutations triggered by client-side interactions (form submissions, button clicks). Import and call actions directly within Client Components or form `action` props.
+- **NEVER** make direct Supabase/Polar/AI API calls from Client Components. Always go through Server Actions.
+
+## Styling & UI
+
+- **Tailwind CSS:** Use utility classes for all styling via the `cn()` helper from `lib/utils.ts`.
+- **Shadcn UI:** Use components from `components/ui/` as the primary building blocks for forms, buttons, modals, tables, etc. Install components using `npx shadcn-ui@latest add ...`. **DO NOT** manually edit files inside `components/ui/` unless necessary for deep customization; prefer styling via Tailwind utilities.
+- **Custom Components:** Build custom, reusable components in `components/` subdirectories (e.g., `components/product/UrlInput.tsx`). Build one-off components within the route's `_components/` folder.
+- **Aesthetics:** Implement the "futuristic" theme (glow, gradients, pastels) defined in the PRD using Tailwind configuration and utility classes.
+- **Animations:** Use `framer-motion` for subtle UI enhancements where appropriate, following examples from `o1-pro` if needed. Apply within Client Components.
+- **Icons:** Use `lucide-react` for icons.
+
+## Cart State Management (Local Client-Side)
+
+- **Library:** Use [Specify Library: e.g., Zustand] store defined in `lib/store/cart-store.ts`.
+- **State Structure:** Store an array of cart items, including `productId` (Polar Product ID), `quantity`, `price`, and the custom `url` string if applicable to that item.
+- **Actions:** Define actions/reducers within the store to handle adding, updating quantity, removing items, and clearing the cart.
+- **Access:** Use the store's hook (e.g., `useCartStore()`) within Client Components (`components/cart/*`, product page add-to-cart button) to read state and dispatch actions.
+- **Persistence:** Consider using middleware (e.g., Zustand's `persist` middleware) to save cart state to `localStorage` so it persists across browser sessions.
+- **Scope:** This local cart state is the source of truth for the UI *before* checkout. The `createPolarCheckoutAction` reads from this state.
+
+---
