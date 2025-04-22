@@ -1,5 +1,3 @@
----
-
 ## E-Com Edge Kit Technical Specification (v2 - Hybrid Approach)
 
 ## 1. System Overview
@@ -16,20 +14,23 @@
     7. Polar sends an `order.succeeded` **webhook** to a custom endpoint (`app/api/webhooks/polar/route.ts`).
     8. The webhook handler verifies the request, retrieves order details (customer email, amount, items, metadata including URL or temp cart ID).
     9. Handler creates/updates a record in **Supabase `purchases`** table, linking `polarOrderId`, customer email, etc. If using the workaround, it retrieves full item details/URLs from `temp_carts`.
-    10. Handler triggers the AI/PDF generation process (`actions/pdf-actions.ts`) for each relevant item in the order.
-    11. PDF generation completes, files are uploaded to **Supabase Storage**, and metadata is saved in **Supabase `outputs`** table, linked to the `purchaseId`. Purchase status updated.
-    12. **Resend** sends a confirmation email with a link to the custom dashboard.
-    13. User lands on the custom success page (`/success`) post-checkout, sees processing animation, then links/prompt for dashboard.
-    14. User navigates to the **custom Dashboard (`/dashboard`)**, authenticating via **Clerk**.
-    15. On first login post-purchase, backend logic links the **Clerk `userId`** to the relevant **Supabase `purchases`** record based on email match.
-    16. Dashboard fetches and displays owned outputs from Supabase, tracks progress, and shows upsell offers. Upsells trigger a new Polar checkout.
+    10. Handler triggers the website scraping process (`actions/scrape-actions.ts#triggerScrapeAction`) for the customer's URL, which uses **Firecrawl** to extract relevant website data.
+    11. The scraped data is stored in the **Supabase `scraped_data`** table, linked to the `purchaseId`.
+    12. Once scraping is complete, the AI/PDF generation process (`actions/pdf-actions.ts`) is triggered, which uses the **Vercel AI SDK** (with OpenAI) to analyze the scraped data and generate insights.
+    13. PDF generation completes, files are uploaded to **Supabase Storage**, and metadata is saved in **Supabase `outputs`** table, linked to the `purchaseId`. Purchase status updated.
+    14. **Resend** sends a confirmation email with a link to the custom dashboard.
+    15. User lands on the custom success page (`/success`) post-checkout, sees processing animation, then links/prompt for dashboard.
+    16. User navigates to the **custom Dashboard (`/dashboard`)**, authenticating via **Clerk**.
+    17. On first login post-purchase, backend logic links the **Clerk `userId`** to the relevant **Supabase `purchases`** record based on email match.
+    18. Dashboard fetches and displays owned outputs from Supabase, tracks progress, and shows upsell offers. Upsells trigger a new Polar checkout.
 - **System Architecture**:
     - **Frontend:** Next.js App Router (Vercel Commerce starter base), Tailwind CSS, **Shadcn UI** (integrated), Framer Motion.
     - **Payment/Order Backend:** [**Polar.sh**](http://polar.sh/) (SDK, API, Webhooks).
     - **Custom Data/Storage:** **Supabase** (Postgres via Drizzle ORM for `purchases`, `outputs`, `profiles`, potentially `temp_carts`; Storage for PDFs).
     - **Authentication:** **Clerk** (for `/dashboard` access).
     - **Custom Backend Logic:** Vercel Functions/Edge Functions (Webhook handler, Server Actions).
-    - **AI Service:** OpenAI (or chosen provider).
+    - **Web Scraping:** **Firecrawl** (to extract data from user-provided URLs).
+    - **AI Service:** **Vercel AI SDK** with OpenAI.
     - **Email:** Resend.
     - **Deployment:** Vercel.
 
@@ -197,7 +198,7 @@
       tier: text("tier").notNull(), // "base", "full-stack", "upsell-competitor", etc.
       url: text("url"), // Input URL (null for upsells without URL input)
       amount: integer("amount").notNull(), // Amount in cents from Polar order
-      status: text("status").default('processing').notNull(), // 'processing', 'completed', 'failed'
+      status: text("status").default('processing').notNull(), // 'processing', 'pending_scrape', 'scrape_complete', 'completed', 'scrape_failed', 'generation_failed'
       createdAt: timestamp("created_at").defaultNow().notNull(),
       updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date())
     });
@@ -220,6 +221,27 @@
      export type InsertOutput = typeof outputsTable.$inferInsert;
      export type SelectOutput = typeof outputsTable.$inferSelect;
     
+    ```
+    
+- **scraped_data**: (New table for storing scraped website content)
+    
+    ```tsx
+    export const scrapedDataTable = pgTable("scraped_data", {
+      id: uuid("id").defaultRandom().primaryKey(),
+      purchaseId: uuid("purchase_id")
+        .references(() => purchasesTable.id, { onDelete: "cascade" })
+        .notNull()
+        .unique(), // Ensure one scrape result per purchase
+      url: text("url").notNull(),
+      scrapedContent: jsonb("scraped_content"), // Store Markdown (as JSON string) or extracted JSON directly
+      contentType: varchar("content_type", { length: 50 }).notNull(), // 'markdown' or 'json'
+      status: varchar("status", { length: 50 }).default('pending').notNull(), // 'pending', 'completed', 'failed'
+      errorMessage: text("error_message"),
+      scrapedAt: timestamp("scraped_at").defaultNow().notNull(),
+      updatedAt: timestamp("updated_at").defaultNow().notNull().$onUpdate(() => new Date())
+    });
+    export type InsertScrapedData = typeof scrapedDataTable.$inferInsert;
+    export type SelectScrapedData = typeof scrapedDataTable.$inferSelect;
     ```
     
 - **raw_outputs**: (New for storing unformatted AI content)
@@ -251,7 +273,7 @@
     
     ```
     
-- **Relationships**: `outputs.purchaseId` → `purchases.id`; `purchases.clerkUserId` → `profiles.clerkUserId`.
+- **Relationships**: `outputs.purchaseId` → `purchases.id`; `purchases.clerkUserId` → `profiles.clerkUserId`; `scraped_data.purchaseId` → `purchases.id`.
 
 ## 5. Key Actions & Logic
 
@@ -259,17 +281,31 @@
     - `createPolarCheckoutAction`: Takes cart items (from local state) + metadata (URL/tempCartId), calls Polar API, returns checkout URL.
 - **`actions/db/*.ts`**:
     - `createPurchaseAction`: Saves purchase details from webhook to Supabase.
-    - `updatePurchaseStatusAction`: Updates status ('completed'/'failed').
+    - `updatePurchaseStatusAction`: Updates status ('pending_scrape', 'scrape_complete', 'completed', 'scrape_failed', 'generation_failed').
     - `createOutputAction`: Saves PDF metadata to Supabase `outputs`.
     - `createRawOutputAction`: Saves raw AI content to Supabase `raw_outputs`.
+    - `createScrapedDataAction`: Saves scraped website data to Supabase `scraped_data`.
     - `getUserOutputsAction`: Fetches outputs for dashboard based on `clerkUserId`.
     - `getProfileByEmailAction`, `createOrLinkProfileAction`: Manages `profiles` table for Clerk linking.
+- **`actions/scrape-actions.ts`**: (New)
+    - `triggerScrapeAction`: Called by webhook handler, manages scraping process.
+    - Uses Firecrawl client to extract data from user URL.
+    - Saves results to `scraped_data` table and triggers AI/PDF generation on success.
 - **`actions/pdf-actions.ts`**:
-    - `generatePDFAction`: Orchestrates AI -> Raw Storage -> PDF -> Storage flow. Calls `createRawOutputAction`, `createOutputAction`, `updatePurchaseStatusAction`, `sendDownloadEmailAction`.
+    - `generatePDFAction`: Orchestrates AI -> Raw Storage -> PDF -> Storage flow.
+    - Fetches scraped data from Supabase `scraped_data`.
+    - Uses Vercel AI SDK to generate content based on scraped data.
+    - Calls `createRawOutputAction`, `createOutputAction`, `updatePurchaseStatusAction`, `sendDownloadEmailAction`.
 - **`actions/clerk-actions.ts`**:
     - `linkClerkUserAction`: Called client-side post-login to ensure Clerk user is linked in `profiles` and `purchases`.
 - **`app/api/webhooks/polar/route.ts`**:
-    - Handles `order.succeeded`. Verifies -> Parses -> Calls `createPurchaseAction` -> Triggers `generatePDFAction` (possibly via queue).
+    - Handles `order.succeeded`. Verifies -> Parses -> Calls `createPurchaseAction` -> Triggers `triggerScrapeAction` (possibly via queue).
+- **`lib/firecrawl.ts`**: (New)
+    - Initializes and configures Firecrawl client.
+    - Exports functions for different scraping methods (scrape, extract).
+- **`lib/ai.ts`**:
+    - Configures Vercel AI SDK with OpenAI.
+    - Exports functions for text generation and processing.
 
 ## 6. Design System & UI (Hybrid)
 
@@ -289,7 +325,7 @@
 
 ## 8. Data Flow Diagram (Hybrid Polar Flow)
 
-[Polar `order.succeeded` Webhook] -> [Webhook Handler (Verify, Parse, Get TempCart?)] -> [Supabase (Save Purchase)] -> [Trigger PDF Gen (AI -> PDF -> Storage)] -> [Supabase (Save Output, Update Status)] -> [Resend Email]
+[Polar `order.succeeded` Webhook] -> [Webhook Handler (Verify, Parse, Get TempCart?)] -> [Supabase (Save Purchase)] -> [Trigger Scrape (Firecrawl)] -> [Supabase (Save Scraped Data)] -> [Trigger PDF Gen (AI -> PDF -> Storage)] -> [Supabase (Save Output, Update Status)] -> [Resend Email]
                                                                                                                                     |
                                                                                                                                     | (User Clicks Link/Login)
                                                                                                                                     V

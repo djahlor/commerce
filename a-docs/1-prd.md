@@ -22,6 +22,14 @@ The "E-Com Edge Kit" is a premium web platform designed to deliver high-value, A
     - Input validation for valid URL.
     - URL passed as **metadata** during Polar checkout initiation.
 - [ ]  **Multi-Item Cart:** Allow users to purchase multiple kits (e.g., for different websites) or a kit plus an immediate small add-on (if designed) in a single checkout session. Leverage Next.js Commerce cart UI/state, adapted for local management.
+- [ ]  **Website Data Acquisition:** 
+    - After successful purchase, use **Firecrawl** to scrape the user-provided URL.
+    - Extract key website data including product details, branding, messaging, pricing strategy, and competitive positioning.
+    - Store the scraped data in Supabase for processing.
+- [ ]  **AI-Powered Analysis:** 
+    - Process the scraped website data using **Vercel AI SDK** (interfacing with OpenAI).
+    - Generate high-value insights and recommendations based on the specific data extracted.
+    - Format outputs into professional, branded PDFs for customer delivery.
 - [ ]  **Automated Output Generation:** AI-driven prompt chaining triggered by a **Polar webhook** (`order.succeeded`). Delivers polished PDFs.
 - [ ]  **Instant Post-Purchase Delivery:** Processing animation (3-5s) on custom success page (`/success`) followed by download link(s) and/or prompt to access dashboard. Email confirmation with links via SendGrid.
 

@@ -9,7 +9,7 @@ export const purchaseStatusEnum = pgEnum("purchase_status", ["processing", "comp
 
 export const purchasesTable = pgTable("purchases", {
   id: uuid("id").defaultRandom().primaryKey(),
-  clerkUserId: text("clerk_user_id").references(() => profilesTable.userId), // Linked post-purchase/login
+  clerkUserId: text("clerk_user_id").references(() => profilesTable.id, { onDelete: "set null" }), // Linked post-purchase/login
   polarOrderId: text("polar_order_id").notNull().unique(),
   customerEmail: text("customer_email").notNull(), // From Polar Order
   tier: text("tier").notNull(), // "base", "full-stack", "upsell-competitor", etc.

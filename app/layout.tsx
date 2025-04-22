@@ -53,7 +53,7 @@ export default async function RootLayout({
   const cart = getDummyCart();
 
   return (
-    <html lang="en" className={GeistSans.variable}>
+    <html lang="en" className={GeistSans.variable} suppressHydrationWarning>
       <body className="bg-neutral-50 text-black selection:bg-teal-300 dark:bg-neutral-900 dark:text-white dark:selection:bg-pink-500 dark:selection:text-white">
         <ClerkProvider appearance={{ baseTheme: dark }}>
           <Providers attribute="class" defaultTheme="system" enableSystem>

@@ -2,15 +2,13 @@
 Defines the database schema for profiles.
 */
 
-import { pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core"
-
-export const membershipEnum = pgEnum("membership", ["free", "pro"])
+import { pgTable, text, timestamp } from "drizzle-orm/pg-core"
 
 export const profilesTable = pgTable("profiles", {
-  userId: text("user_id").primaryKey().notNull(),
-  membership: membershipEnum("membership").notNull().default("free"),
-  stripeCustomerId: text("stripe_customer_id"),
-  stripeSubscriptionId: text("stripe_subscription_id"),
+  id: text("id").primaryKey().notNull(), // Clerk user ID
+  email: text("email").notNull().unique(), // User's email
+  firstName: text("first_name"),
+  lastName: text("last_name"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
