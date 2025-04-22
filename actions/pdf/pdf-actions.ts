@@ -1,6 +1,6 @@
 'use server';
 
-import { ActionState, ErrorMessages } from '@/lib/types';
+import { ActionState } from '@/types';
 
 // This is a placeholder. In Step 12 we'll properly implement the PDF generation
 export async function generatePDFAction(
@@ -24,6 +24,7 @@ export async function generatePDFAction(
 
     return {
       isSuccess: true,
+      message: "PDFs generated successfully",
       data: {
         // Placeholder IDs until actual implementation
         outputIds: ['placeholder-output-id-1', 'placeholder-output-id-2']
@@ -33,8 +34,7 @@ export async function generatePDFAction(
     console.error('Error in generatePDFAction:', error);
     return {
       isSuccess: false,
-      error: error instanceof Error ? error : new Error(String(error)),
-      message: ErrorMessages.INTERNAL_ERROR
+      message: "An unexpected error occurred. Please try again later."
     };
   }
 } 

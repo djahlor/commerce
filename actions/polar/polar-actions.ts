@@ -1,6 +1,6 @@
 'use server';
 
-import { ActionState, ErrorMessages } from '@/lib/types';
+import { ActionState } from '@/types';
 
 // This is a placeholder. In Step 14 we'll properly initialize the Polar SDK client
 // and implement the actual checkout functionality
@@ -25,6 +25,7 @@ export async function createPolarCheckoutAction(
 
     return {
       isSuccess: true,
+      message: "Checkout created successfully",
       data: {
         // Placeholder URL until actual implementation
         checkoutUrl: 'https://example.com/checkout/placeholder'
@@ -34,8 +35,7 @@ export async function createPolarCheckoutAction(
     console.error('Error in createPolarCheckoutAction:', error);
     return {
       isSuccess: false,
-      error: error instanceof Error ? error : new Error(String(error)),
-      message: ErrorMessages.INTERNAL_ERROR
+      message: "An unexpected error occurred. Please try again later."
     };
   }
 } 

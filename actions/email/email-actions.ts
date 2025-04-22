@@ -1,6 +1,6 @@
 'use server';
 
-import { ActionState, ErrorMessages } from '@/lib/types';
+import { ActionState } from '@/types';
 
 // This is a placeholder. In Step 13 we'll properly implement the email functionality
 export async function sendDownloadEmailAction(
@@ -20,14 +20,15 @@ export async function sendDownloadEmailAction(
     // 3. Send the email
 
     return {
-      isSuccess: true
+      isSuccess: true,
+      message: "Download email sent successfully",
+      data: undefined
     };
   } catch (error) {
     console.error('Error in sendDownloadEmailAction:', error);
     return {
       isSuccess: false,
-      error: error instanceof Error ? error : new Error(String(error)),
-      message: ErrorMessages.INTERNAL_ERROR
+      message: "An unexpected error occurred. Please try again later."
     };
   }
 } 

@@ -2,7 +2,7 @@
 
 import { db } from '@/db/db';
 import { profilesTable } from '@/db/schema/profiles-schema';
-import { ActionState, ErrorMessages } from '@/lib/types';
+import { ActionState } from '@/types';
 import { auth } from '@clerk/nextjs/server';
 import { eq } from 'drizzle-orm';
 
@@ -16,7 +16,7 @@ export async function getCurrentProfileAction(): Promise<ActionState<typeof prof
     if (!userId) {
       return {
         isSuccess: false,
-        message: ErrorMessages.UNAUTHORIZED
+        message: "You must be signed in to perform this action."
       };
     }
 
@@ -26,14 +26,14 @@ export async function getCurrentProfileAction(): Promise<ActionState<typeof prof
 
     return {
       isSuccess: true,
+      message: "Profile retrieved successfully",
       data: profile
     };
   } catch (error) {
     console.error('Error in getCurrentProfileAction:', error);
     return {
       isSuccess: false,
-      error: error instanceof Error ? error : new Error(String(error)),
-      message: ErrorMessages.INTERNAL_ERROR
+      message: "An unexpected error occurred. Please try again later."
     };
   }
 }
@@ -48,7 +48,7 @@ export async function upsertProfileAction(email: string): Promise<ActionState<ty
     if (!userId) {
       return {
         isSuccess: false,
-        message: ErrorMessages.UNAUTHORIZED
+        message: "You must be signed in to perform this action."
       };
     }
 
@@ -67,6 +67,7 @@ export async function upsertProfileAction(email: string): Promise<ActionState<ty
 
       return {
         isSuccess: true,
+        message: "Profile updated successfully",
         data: updatedProfile
       };
     } else {
@@ -81,6 +82,7 @@ export async function upsertProfileAction(email: string): Promise<ActionState<ty
 
       return {
         isSuccess: true,
+        message: "Profile created successfully",
         data: newProfile
       };
     }
@@ -88,8 +90,7 @@ export async function upsertProfileAction(email: string): Promise<ActionState<ty
     console.error('Error in upsertProfileAction:', error);
     return {
       isSuccess: false,
-      error: error instanceof Error ? error : new Error(String(error)),
-      message: ErrorMessages.INTERNAL_ERROR
+      message: "An unexpected error occurred. Please try again later."
     };
   }
 } 

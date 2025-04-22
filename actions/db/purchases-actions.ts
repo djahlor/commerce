@@ -2,7 +2,7 @@
 
 import { db } from '@/db/db';
 import { purchasesTable } from '@/db/schema/purchases-schema';
-import { ActionState, ErrorMessages } from '@/lib/types';
+import { ActionState } from '@/types';
 import { auth } from '@clerk/nextjs/server';
 import { eq } from 'drizzle-orm';
 
@@ -37,14 +37,14 @@ export async function createPurchaseAction(
 
     return {
       isSuccess: true,
+      message: "Purchase created successfully",
       data: purchase
     };
   } catch (error) {
     console.error('Error in createPurchaseAction:', error);
     return {
       isSuccess: false,
-      error: error instanceof Error ? error : new Error(String(error)),
-      message: ErrorMessages.INTERNAL_ERROR
+      message: "An unexpected error occurred. Please try again later."
     };
   }
 }
@@ -69,20 +69,20 @@ export async function updatePurchaseStatusAction(
     if (!purchase) {
       return {
         isSuccess: false,
-        message: ErrorMessages.NOT_FOUND
+        message: "The requested resource was not found."
       };
     }
 
     return {
       isSuccess: true,
+      message: "Purchase status updated successfully",
       data: purchase
     };
   } catch (error) {
     console.error('Error in updatePurchaseStatusAction:', error);
     return {
       isSuccess: false,
-      error: error instanceof Error ? error : new Error(String(error)),
-      message: ErrorMessages.INTERNAL_ERROR
+      message: "An unexpected error occurred. Please try again later."
     };
   }
 }
@@ -97,7 +97,7 @@ export async function getUserPurchasesAction(): Promise<ActionState<Array<typeof
     if (!userId) {
       return {
         isSuccess: false,
-        message: ErrorMessages.UNAUTHORIZED
+        message: "You must be signed in to perform this action."
       };
     }
 
@@ -108,14 +108,14 @@ export async function getUserPurchasesAction(): Promise<ActionState<Array<typeof
 
     return {
       isSuccess: true,
+      message: "Purchases retrieved successfully",
       data: purchases
     };
   } catch (error) {
     console.error('Error in getUserPurchasesAction:', error);
     return {
       isSuccess: false,
-      error: error instanceof Error ? error : new Error(String(error)),
-      message: ErrorMessages.INTERNAL_ERROR
+      message: "An unexpected error occurred. Please try again later."
     };
   }
 } 

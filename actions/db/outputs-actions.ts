@@ -3,7 +3,7 @@
 import { db } from '@/db/db';
 import { outputsTable } from '@/db/schema/outputs-schema';
 import { purchasesTable } from '@/db/schema/purchases-schema';
-import { ActionState, ErrorMessages } from '@/lib/types';
+import { ActionState } from '@/types';
 import { auth } from '@clerk/nextjs/server';
 import { eq } from 'drizzle-orm';
 
@@ -26,14 +26,14 @@ export async function createOutputAction(
 
     return {
       isSuccess: true,
+      message: "Output created successfully",
       data: output
     };
   } catch (error) {
     console.error('Error in createOutputAction:', error);
     return {
       isSuccess: false,
-      error: error instanceof Error ? error : new Error(String(error)),
-      message: ErrorMessages.INTERNAL_ERROR
+      message: "An unexpected error occurred. Please try again later."
     };
   }
 }
@@ -52,14 +52,14 @@ export async function getPurchaseOutputsAction(
 
     return {
       isSuccess: true,
+      message: "Purchase outputs retrieved successfully",
       data: outputs
     };
   } catch (error) {
     console.error('Error in getPurchaseOutputsAction:', error);
     return {
       isSuccess: false,
-      error: error instanceof Error ? error : new Error(String(error)),
-      message: ErrorMessages.INTERNAL_ERROR
+      message: "An unexpected error occurred. Please try again later."
     };
   }
 }
@@ -74,7 +74,7 @@ export async function getUserOutputsAction(): Promise<ActionState<Array<(typeof 
     if (!userId) {
       return {
         isSuccess: false,
-        message: ErrorMessages.UNAUTHORIZED
+        message: "You must be signed in to perform this action."
       };
     }
 
@@ -88,14 +88,14 @@ export async function getUserOutputsAction(): Promise<ActionState<Array<(typeof 
 
     return {
       isSuccess: true,
+      message: "User outputs retrieved successfully",
       data: outputs
     };
   } catch (error) {
     console.error('Error in getUserOutputsAction:', error);
     return {
       isSuccess: false,
-      error: error instanceof Error ? error : new Error(String(error)),
-      message: ErrorMessages.INTERNAL_ERROR
+      message: "An unexpected error occurred. Please try again later."
     };
   }
 } 

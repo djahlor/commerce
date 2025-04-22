@@ -2,7 +2,7 @@
 
 import { db } from '@/db/db';
 import { rawOutputsTable } from '@/db/schema/raw-outputs-schema';
-import { ActionState, ErrorMessages } from '@/lib/types';
+import { ActionState } from '@/types';
 import { eq } from 'drizzle-orm';
 
 /**
@@ -23,14 +23,14 @@ export async function createRawOutputAction(
 
     return {
       isSuccess: true,
+      message: "Raw output created successfully",
       data: rawOutput
     };
   } catch (error) {
     console.error('Error in createRawOutputAction:', error);
     return {
       isSuccess: false,
-      error: error instanceof Error ? error : new Error(String(error)),
-      message: ErrorMessages.INTERNAL_ERROR
+      message: "An unexpected error occurred. Please try again later."
     };
   }
 }
@@ -49,20 +49,20 @@ export async function getRawOutputAction(
     if (!rawOutput) {
       return {
         isSuccess: false,
-        message: ErrorMessages.NOT_FOUND
+        message: "The requested resource was not found."
       };
     }
 
     return {
       isSuccess: true,
+      message: "Raw output retrieved successfully",
       data: rawOutput
     };
   } catch (error) {
     console.error('Error in getRawOutputAction:', error);
     return {
       isSuccess: false,
-      error: error instanceof Error ? error : new Error(String(error)),
-      message: ErrorMessages.INTERNAL_ERROR
+      message: "An unexpected error occurred. Please try again later."
     };
   }
 }
@@ -81,14 +81,14 @@ export async function getPurchaseRawOutputsAction(
 
     return {
       isSuccess: true,
+      message: "Purchase raw outputs retrieved successfully",
       data: rawOutputs
     };
   } catch (error) {
     console.error('Error in getPurchaseRawOutputsAction:', error);
     return {
       isSuccess: false,
-      error: error instanceof Error ? error : new Error(String(error)),
-      message: ErrorMessages.INTERNAL_ERROR
+      message: "An unexpected error occurred. Please try again later."
     };
   }
 } 

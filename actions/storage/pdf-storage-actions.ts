@@ -1,6 +1,6 @@
 'use server';
 
-import { ActionState, ErrorMessages } from '@/lib/types';
+import { ActionState } from '@/types';
 
 // This is a placeholder. In Step 12 we'll properly implement the storage functionality
 export async function uploadPdfStorage(
@@ -20,6 +20,7 @@ export async function uploadPdfStorage(
 
     return {
       isSuccess: true,
+      message: "PDF uploaded successfully",
       data: {
         // Placeholder path until actual implementation
         filePath: `pdfs/${purchaseId}/${fileName}`
@@ -29,8 +30,7 @@ export async function uploadPdfStorage(
     console.error('Error in uploadPdfStorage:', error);
     return {
       isSuccess: false,
-      error: error instanceof Error ? error : new Error(String(error)),
-      message: ErrorMessages.INTERNAL_ERROR
+      message: "An unexpected error occurred. Please try again later."
     };
   }
 }
@@ -49,6 +49,7 @@ export async function getSignedUrlAction(
 
     return {
       isSuccess: true,
+      message: "Signed URL generated successfully",
       data: {
         // Placeholder URL until actual implementation
         url: `https://example.com/download/${filePath}?token=placeholder`
@@ -58,8 +59,7 @@ export async function getSignedUrlAction(
     console.error('Error in getSignedUrlAction:', error);
     return {
       isSuccess: false,
-      error: error instanceof Error ? error : new Error(String(error)),
-      message: ErrorMessages.INTERNAL_ERROR
+      message: "An unexpected error occurred. Please try again later."
     };
   }
 } 
