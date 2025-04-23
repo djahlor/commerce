@@ -1,0 +1,58 @@
+---
+description: Guidelines for robust web scraping using Firecrawl with fallback mechanisms
+globs: actions/*-actions.ts, lib/firecrawl*.ts
+alwaysApply: true
+---
+
+# Firecrawl Integration Best Practices
+
+- **Always Implement Fallback Mechanisms for Content Extraction**
+  - The Firecrawl SDK may fail with "No markdown content" for some websites even when content exists
+  - Implement a direct API approach as fallback when the SDK method fails
+  - Example pattern:
+  ```typescript
+  try {
+    // Try SDK method first
+    const result = await scrapeWithRetry(url, options);
+    // Process successful result...
+  } catch (error) {
+    if (error.message === 'No markdown content found in scrape result') {
+      // Fall back to direct API method
+      const directResult = await directScrape(url);
+      // Process direct result...
+    } else {
+      // Handle other errors
+      throw error;
+    }
+  }
+  ```
+
+- **Use Batch Processing for Complex Websites**
+  - For e-commerce and content-rich sites, use the batch processing API
+  - Crawl the sitemap to discover important pages
+  - Identify and process key pages (homepage, about, products) 
+  - Combine content from multiple pages for comprehensive extraction
+
+- **Configure Scraping Options Appropriately**
+  - Set `onlyMainContent: true` to focus on relevant content
+  - Exclude navigation, headers, footers, and other non-essential elements
+  - Use longer `waitFor` values (3000-5000ms) for dynamic content
+  - Increase retry attempts (3+) with exponential backoff
+
+- **Implement Proper Error Handling and Status Updates**
+  - Create pending records before starting scrape operations
+  - Update status during the scraping process (pending → processing → complete/failed)
+  - Log detailed error information for debugging
+  - Include metadata about the scraping method used in the content
+
+- **Use Content Type Validation**
+  - Always verify that content was successfully extracted
+  - Check for specific content types (markdown, html, json)
+  - Include content length validation to ensure sufficient data was extracted
+  - Store source metadata to track which extraction method was used
+
+- **Test with Multiple Website Types**
+  - E-commerce sites often have complex dynamic content
+  - Test with sites like evecurls.com that may require special handling
+  - Verify both SDK and direct API approaches work
+  - Include edge cases in integration tests
