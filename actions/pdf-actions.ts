@@ -1,7 +1,7 @@
 'use server';
 
-import { analyzeWebsiteContent } from '@/lib/ai';
-import { createBlueprintReport, createPersonaReport, createSEOReport } from '@/lib/pdf';
+import { analyzeContentStrategy, analyzeMarketingStrategy, analyzeTechnicalRecommendations, analyzeWebsiteContent } from '@/lib/ai';
+import { createBlueprintReport, createContentReport, createMarketingReport, createPersonaReport, createSEOReport, createTechnicalReport } from '@/lib/pdf';
 import { ActionState } from '@/types';
 import { createOutputAction } from './db/outputs-actions';
 import { getPurchaseByIdAction, updatePurchaseStatusAction } from './db/purchases-actions';
@@ -10,6 +10,11 @@ import { uploadPdfStorage } from './storage/pdf-storage-actions';
 
 // PDF types that can be generated for different tiers
 export type PDFType = 'blueprint' | 'personas' | 'seo' | 'marketing' | 'content' | 'technical';
+
+// Maximum number of retries for different operations
+const MAX_AI_RETRIES = 2;
+const MAX_PDF_RETRIES = 1;
+const MAX_UPLOAD_RETRIES = 2;
 
 /**
  * Core PDF generation action that orchestrates the entire flow:
@@ -88,41 +93,37 @@ export async function generatePDFAction(
     
     // 4. Initialize results array
     const outputs: { type: string, filePath: string }[] = [];
+    const errors: string[] = [];
     
     // 5. Generate PDFs
     try {
-      // Analyze content once for use in multiple PDFs
-      const analysis = await analyzeWebsiteContent(content);
+      // Pre-analyze content for each type of report we need to generate
+      // This way we can reuse analyses if a generation fails
+      const analyses: Record<string, any> = {};
       
-      // Generate each PDF
+      // Process each report type
       for (const type of pdfTypesToGenerate) {
-        // Generate the appropriate PDF based on type
-        let pdfResult: ActionState<{ buffer: Buffer; filePath?: string }>;
-        
-        switch (type) {
-          case 'blueprint':
-            pdfResult = await createBlueprintReport(analysis, purchaseId);
-            break;
-          case 'personas':
-            pdfResult = await createPersonaReport(analysis, purchaseId);
-            break;
-          case 'seo':
-            pdfResult = await createSEOReport(analysis, purchaseId);
-            break;
-          // Additional PDF types will be implemented in step 13.5
-          default:
-            console.log(`Skipping unsupported PDF type: ${type}`);
-            continue;
+        // Generate or retrieve the appropriate analysis based on type
+        try {
+          analyses[type] = await getAnalysisForType(type, content, analyses);
+        } catch (analysisError: any) {
+          console.error(`Analysis failed for ${type} report:`, analysisError);
+          errors.push(`Failed to analyze content for ${type} report: ${analysisError.message || 'Unknown error'}`);
+          continue; // Skip to next report type
         }
+        
+        // Generate the appropriate PDF based on type with retries
+        const pdfResult = await generatePDFWithRetry(type, analyses[type], purchaseId);
         
         if (!pdfResult.isSuccess || !pdfResult.data?.buffer) {
           console.error(`Failed to generate ${type} PDF:`, pdfResult.message);
-          continue;
+          errors.push(`Failed to generate ${type} PDF: ${pdfResult.message}`);
+          continue; // Skip to next report type
         }
         
-        // 6. Upload the PDF to Supabase Storage
+        // Upload the PDF to Supabase Storage with retries
         const fileName = `${type}-report-${Date.now()}.pdf`;
-        const uploadResult = await uploadPdfStorage(
+        const uploadResult = await uploadPDFWithRetry(
           pdfResult.data.buffer,
           fileName,
           purchaseId
@@ -130,12 +131,13 @@ export async function generatePDFAction(
         
         if (!uploadResult.isSuccess || !uploadResult.data) {
           console.error(`Failed to upload ${type} PDF:`, uploadResult.message);
-          continue;
+          errors.push(`Failed to upload ${type} PDF: ${uploadResult.message}`);
+          continue; // Skip to next report type
         }
         
         const filePath = uploadResult.data.filePath;
         
-        // 7. Create an output record
+        // Create an output record
         const outputResult = await createOutputAction({
           purchaseId,
           type,
@@ -147,22 +149,36 @@ export async function generatePDFAction(
             type,
             filePath
           });
+        } else {
+          errors.push(`Failed to record ${type} PDF output: ${outputResult.message}`);
         }
       }
       
-      // 8. Update purchase status based on outputs
+      // Update purchase status based on outputs
       if (outputs.length > 0) {
+        // If we have at least some outputs, consider it a success even if some failed
         await updatePurchaseStatusAction(purchaseId, 'completed');
+        
+        // If there were some errors but we still produced outputs
+        if (errors.length > 0) {
+          return {
+            isSuccess: true,
+            message: `Generated ${outputs.length}/${pdfTypesToGenerate.length} PDFs. Some reports had errors: ${errors.join('; ')}`,
+            data: { outputs }
+          };
+        }
+        
         return {
           isSuccess: true,
           message: `Successfully generated ${outputs.length} PDFs`,
           data: { outputs }
         };
       } else {
+        // If no outputs were created, it's a failure
         await updatePurchaseStatusAction(purchaseId, 'generation_failed');
         return {
           isSuccess: false,
-          message: 'Failed to generate any PDFs.'
+          message: `Failed to generate any PDFs. Errors: ${errors.join('; ')}`
         };
       }
       
@@ -207,4 +223,162 @@ function getPDFTypesForTier(tier: string): PDFType[] {
     default:
       return ['blueprint'];
   }
+}
+
+/**
+ * Performs content analysis for a specific report type
+ * Reuses existing analyses when possible to avoid redundant AI calls
+ */
+async function getAnalysisForType(type: PDFType, content: string, existingAnalyses: Record<string, any>): Promise<any> {
+  try {
+    switch (type) {
+      case 'blueprint':
+        // If we already analyzed the basic website content, reuse it
+        if (!existingAnalyses.blueprint) {
+          existingAnalyses.blueprint = await retryOperation(
+            () => analyzeWebsiteContent(content),
+            MAX_AI_RETRIES,
+            'website content analysis'
+          );
+        }
+        return existingAnalyses.blueprint;
+        
+      case 'personas':
+        // Personas can use the same data as blueprint
+        if (!existingAnalyses.blueprint) {
+          existingAnalyses.blueprint = await retryOperation(
+            () => analyzeWebsiteContent(content),
+            MAX_AI_RETRIES,
+            'website content analysis'
+          );
+        }
+        return existingAnalyses.blueprint;
+        
+      case 'seo':
+        // SEO can use the same data as blueprint but with some additional fields
+        if (!existingAnalyses.blueprint) {
+          existingAnalyses.blueprint = await retryOperation(
+            () => analyzeWebsiteContent(content),
+            MAX_AI_RETRIES,
+            'website content analysis'
+          );
+        }
+        return existingAnalyses.blueprint;
+        
+      case 'marketing':
+        // Marketing needs specific analysis
+        if (!existingAnalyses.marketing) {
+          existingAnalyses.marketing = await retryOperation(
+            () => analyzeMarketingStrategy(content),
+            MAX_AI_RETRIES,
+            'marketing strategy analysis'
+          );
+        }
+        return existingAnalyses.marketing;
+        
+      case 'content':
+        // Content needs specific analysis
+        if (!existingAnalyses.content) {
+          existingAnalyses.content = await retryOperation(
+            () => analyzeContentStrategy(content),
+            MAX_AI_RETRIES,
+            'content strategy analysis'
+          );
+        }
+        return existingAnalyses.content;
+        
+      case 'technical':
+        // Technical needs specific analysis
+        if (!existingAnalyses.technical) {
+          existingAnalyses.technical = await retryOperation(
+            () => analyzeTechnicalRecommendations(content),
+            MAX_AI_RETRIES,
+            'technical recommendations analysis'
+          );
+        }
+        return existingAnalyses.technical;
+        
+      default:
+        throw new Error(`Unsupported PDF type: ${type}`);
+    }
+  } catch (error: any) {
+    console.error(`Error getting analysis for ${type}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Generates a PDF with retry logic
+ */
+async function generatePDFWithRetry(
+  type: PDFType,
+  analysis: any,
+  purchaseId: string
+): Promise<ActionState<{ buffer: Buffer; filePath?: string }>> {
+  return retryOperation(
+    async () => {
+      switch (type) {
+        case 'blueprint':
+          return createBlueprintReport(analysis, purchaseId);
+        case 'personas':
+          return createPersonaReport(analysis, purchaseId);
+        case 'seo':
+          return createSEOReport(analysis, purchaseId);
+        case 'marketing':
+          return createMarketingReport(analysis, purchaseId);
+        case 'content':
+          return createContentReport(analysis, purchaseId);
+        case 'technical':
+          return createTechnicalReport(analysis, purchaseId);
+        default:
+          throw new Error(`Unsupported PDF type: ${type}`);
+      }
+    },
+    MAX_PDF_RETRIES,
+    `${type} PDF generation`
+  );
+}
+
+/**
+ * Uploads a PDF with retry logic
+ */
+async function uploadPDFWithRetry(
+  buffer: Buffer,
+  fileName: string,
+  purchaseId: string
+): Promise<ActionState<{ filePath: string }>> {
+  return retryOperation(
+    () => uploadPdfStorage(buffer, fileName, purchaseId),
+    MAX_UPLOAD_RETRIES,
+    'PDF upload'
+  );
+}
+
+/**
+ * Generic retry operation with exponential backoff
+ */
+async function retryOperation<T>(
+  operation: () => Promise<T>,
+  maxRetries: number,
+  operationName: string
+): Promise<T> {
+  let lastError: any;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      if (attempt > 0) {
+        console.log(`Retrying ${operationName} (attempt ${attempt}/${maxRetries})...`);
+        // Exponential backoff
+        const delay = 1000 * Math.pow(2, attempt - 1);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+      
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      console.error(`${operationName} failed (attempt ${attempt + 1}/${maxRetries + 1}):`, error);
+    }
+  }
+  
+  throw lastError || new Error(`All ${maxRetries + 1} attempts for ${operationName} failed`);
 } 

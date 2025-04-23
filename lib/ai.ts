@@ -89,4 +89,180 @@ export async function generateTextAnalysis(content: string, analysisType: string
   });
 }
 
+/**
+ * Generates a detailed marketing strategy analysis based on website content
+ * @param content The scraped website content
+ * @returns Structured marketing strategy recommendations
+ */
+export async function analyzeMarketingStrategy(content: string) {
+  const { z } = await import('zod');
+  const { generateText } = await import('ai');
+
+  // Define schema for validation
+  const schema = z.object({
+    overview: z.string().describe('High-level marketing strategy overview'),
+    targetAudience: z.array(z.object({
+      segment: z.string().describe('Name of customer segment'),
+      description: z.string().describe('Description of this customer segment'),
+      channels: z.array(z.string()).describe('Recommended marketing channels for this segment')
+    })),
+    contentRecommendations: z.array(z.string()).describe('Content marketing recommendations'),
+    socialMediaStrategy: z.array(z.string()).describe('Social media marketing recommendations'),
+    emailMarketing: z.array(z.string()).describe('Email marketing campaign ideas'),
+    paidAdvertising: z.array(z.string()).describe('Paid advertising recommendations'),
+    conversionOptimization: z.array(z.string()).describe('Conversion rate optimization suggestions'),
+    brandMessaging: z.string().describe('Brand messaging and positioning recommendations'),
+    nextSteps: z.array(z.string()).describe('Suggested next steps for implementation')
+  });
+
+  const prompt = `
+    Analyze this e-commerce website content and develop a comprehensive marketing strategy.
+    Return a JSON object with these fields:
+    - overview: High-level marketing strategy overview
+    - targetAudience: Array of audience segments with {segment, description, channels}
+    - contentRecommendations: Array of content marketing recommendations
+    - socialMediaStrategy: Array of social media marketing recommendations 
+    - emailMarketing: Array of email marketing campaign ideas
+    - paidAdvertising: Array of paid advertising recommendations
+    - conversionOptimization: Array of conversion rate optimization suggestions
+    - brandMessaging: Brand messaging and positioning recommendations
+    - nextSteps: Array of suggested next steps for implementation
+    
+    Content: ${content.slice(0, 8000)}...
+    
+    Format your response as valid JSON without any other text.
+  `;
+
+  const jsonResponse = await generateText({
+    model: openai('gpt-4o'),
+    prompt: prompt,
+    maxTokens: 2500,
+  });
+
+  try {
+    // @ts-ignore
+    const result = JSON.parse(jsonResponse);
+    return schema.parse(result);
+  } catch (error) {
+    console.error('Failed to parse marketing strategy analysis:', error);
+    throw new Error('Could not generate marketing strategy analysis');
+  }
+}
+
+/**
+ * Generates a detailed content strategy analysis based on website content
+ * @param content The scraped website content
+ * @returns Structured content strategy recommendations
+ */
+export async function analyzeContentStrategy(content: string) {
+  const { z } = await import('zod');
+  const { generateText } = await import('ai');
+
+  // Define schema for validation
+  const schema = z.object({
+    overview: z.string().describe('High-level content strategy overview'),
+    contentGaps: z.array(z.string()).describe('Identified content gaps on the website'),
+    contentTypes: z.array(z.object({
+      type: z.string().describe('Content type'),
+      purpose: z.string().describe('Purpose of this content type'),
+      topics: z.array(z.string()).describe('Suggested topics for this content type')
+    })),
+    seoKeywords: z.array(z.string()).describe('Recommended SEO keywords to target'),
+    contentCalendar: z.array(z.string()).describe('Content calendar recommendations'),
+    contentDistribution: z.array(z.string()).describe('Content distribution suggestions'),
+    contentUpgrades: z.array(z.string()).describe('Recommendations for improving existing content'),
+    nextSteps: z.array(z.string()).describe('Suggested next steps for implementation')
+  });
+
+  const prompt = `
+    Analyze this e-commerce website content and develop a comprehensive content strategy.
+    Return a JSON object with these fields:
+    - overview: High-level content strategy overview
+    - contentGaps: Array of identified content gaps on the website
+    - contentTypes: Array of recommended content types with {type, purpose, topics}
+    - seoKeywords: Array of recommended SEO keywords to target
+    - contentCalendar: Array of content calendar recommendations
+    - contentDistribution: Array of content distribution suggestions
+    - contentUpgrades: Array of recommendations for improving existing content
+    - nextSteps: Array of suggested next steps for implementation
+    
+    Content: ${content.slice(0, 8000)}...
+    
+    Format your response as valid JSON without any other text.
+  `;
+
+  const jsonResponse = await generateText({
+    model: openai('gpt-4o'),
+    prompt: prompt,
+    maxTokens: 2500,
+  });
+
+  try {
+    // @ts-ignore
+    const result = JSON.parse(jsonResponse);
+    return schema.parse(result);
+  } catch (error) {
+    console.error('Failed to parse content strategy analysis:', error);
+    throw new Error('Could not generate content strategy analysis');
+  }
+}
+
+/**
+ * Generates a detailed technical recommendations analysis based on website content
+ * @param content The scraped website content
+ * @returns Structured technical recommendations
+ */
+export async function analyzeTechnicalRecommendations(content: string) {
+  const { z } = await import('zod');
+  const { generateText } = await import('ai');
+
+  // Define schema for validation
+  const schema = z.object({
+    overview: z.string().describe('High-level technical overview'),
+    performance: z.array(z.string()).describe('Website performance recommendations'),
+    security: z.array(z.string()).describe('Security recommendations'),
+    accessibility: z.array(z.string()).describe('Accessibility improvements'),
+    mobileFriendliness: z.array(z.string()).describe('Mobile optimization recommendations'),
+    architecture: z.array(z.string()).describe('Website architecture recommendations'),
+    checkout: z.array(z.string()).describe('Checkout process improvements'),
+    integrations: z.array(z.string()).describe('Recommended third-party integrations'),
+    analytics: z.array(z.string()).describe('Analytics and tracking recommendations'),
+    nextSteps: z.array(z.string()).describe('Prioritized technical tasks')
+  });
+
+  const prompt = `
+    Analyze this e-commerce website content and develop comprehensive technical recommendations.
+    Return a JSON object with these fields:
+    - overview: High-level technical overview
+    - performance: Array of website performance recommendations
+    - security: Array of security recommendations
+    - accessibility: Array of accessibility improvements
+    - mobileFriendliness: Array of mobile optimization recommendations
+    - architecture: Array of website architecture recommendations
+    - checkout: Array of checkout process improvements
+    - integrations: Array of recommended third-party integrations
+    - analytics: Array of analytics and tracking recommendations
+    - nextSteps: Array of prioritized technical tasks
+    
+    Content: ${content.slice(0, 8000)}...
+    
+    Format your response as valid JSON without any other text.
+  `;
+
+  const jsonResponse = await generateText({
+    model: openai('gpt-4o'),
+    prompt: prompt,
+    maxTokens: 2500,
+  });
+
+  try {
+    // @ts-ignore
+    const result = JSON.parse(jsonResponse);
+    return schema.parse(result);
+  } catch (error) {
+    console.error('Failed to parse technical recommendations analysis:', error);
+    throw new Error('Could not generate technical recommendations');
+  }
+}
+
 export default openai; 
