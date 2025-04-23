@@ -72,10 +72,26 @@
     - **User Instructions**: Ensure Firecrawl API key is properly set in environment variables. Test with various e-commerce website types.
     - **Step Dependencies**: Steps 1, 2, 10.1
     - **Mitigation**: Implement robust error handling and retry logic. Consider async processing for longer scrapes.
-- [ ]  **Step 13: Implement AI & PDF Generation Actions**
-    - **Task**: Set up Vercel AI SDK client (`lib/ai.ts`), PDF library helpers (`lib/pdf.ts`). Create the core `generatePDFAction` in `actions/pdf-actions.ts` outlining the flow (load scraped data -> AI analysis -> format -> save to storage -> update DB -> trigger email). Implement Supabase storage upload logic (`actions/storage/pdf-storage-actions.ts`).
-    - **Files**: `lib/ai.ts`, `lib/pdf.ts`, `actions/pdf-actions.ts`, `actions/storage/pdf-storage-actions.ts`
-    - **Step Dependencies**: Steps 1, 2, 10, 12
+- [x]  **Step 13.1: Set up Vercel AI SDK Client**
+    - **Task**: Create `lib/ai.ts` to initialize and configure the Vercel AI SDK client with OpenAI. Configure with API key, set up common parameters (temperature, max tokens), and create helper functions for text generation and analysis.
+    - **Files**: `lib/ai.ts`
+    - **Step Dependencies**: Steps 1, 2
+- [x]  **Step 13.2: Implement PDF Library Setup**
+    - **Task**: Set up PDFKit helpers in `lib/pdf.ts`. Create wrapper functions for common PDF operations (document initialization, text formatting, adding images, page management) and specialized functions for different report types.
+    - **Files**: `lib/pdf.ts`
+    - **Step Dependencies**: Step 1
+- [ ]  **Step 13.3: Implement Supabase Storage Actions**
+    - **Task**: Create upload helper functions for Supabase Storage in `actions/storage/pdf-storage-actions.ts`. Implement `uploadPdfStorage` action and functions to generate signed URLs for secure downloads.
+    - **Files**: `actions/storage/pdf-storage-actions.ts`
+    - **Step Dependencies**: Steps 2, 3
+- [ ]  **Step 13.4: Create Basic PDF Generation Action**
+    - **Task**: Implement core structure of `generatePDFAction` with proper parameters (purchaseId, url, tier), basic flow, error handling, and database connections.
+    - **Files**: `actions/pdf-actions.ts`
+    - **Step Dependencies**: Steps 10, 13.1, 13.2, 13.3
+- [ ]  **Step 13.5: Implement Full AI-to-PDF Pipeline**
+    - **Task**: Complete the full generation pipeline in `generatePDFAction`. Integrate scraped data loading, AI analysis, PDF generation, storage saving, and database updates. Implement basic retry logic for transient errors.
+    - **Files**: `actions/pdf-actions.ts` (update)
+    - **Step Dependencies**: Steps 12, 13.4
     - **Mitigation**: Test with sample scraped data to ensure consistent AI outputs.
 - [ ]  **Step 14: Implement Email Action**
     - **Task**: Set up Resend client/helpers (`lib/resend.ts` or similar). Create `sendDownloadEmailAction` (`actions/email-actions.ts`) to send confirmation/link emails.
