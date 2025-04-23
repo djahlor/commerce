@@ -1,4 +1,6 @@
 # Implenetation Plan
+
+### Phase 1: Setup
 - [x]  **Step 1: Initialize Next.js Commerce & Core Dependencies**
     - **Task**: Clone the Vercel Next.js Commerce starter kit. Install *all* required additional dependencies: Polar SDK (`@polar.sh/sdk` or similar), Supabase (`@supabase/supabase-js`), Clerk (`@clerk/nextjs`), Drizzle (`drizzle-orm`, `postgres`, `drizzle-kit`), OpenAI (`openai`), Resend (`resend`), PDF library (`pdfkit`), state management (`zustand` or `jotai` - choose one for cart), `react-hook-form`, `zod`, **Firecrawl** (`@mendable/firecrawl-js`), **Vercel AI SDK** (`ai`).
     - **Files**: `package.json`
@@ -80,15 +82,15 @@
     - **Task**: Set up PDFKit helpers in `lib/pdf.ts`. Create wrapper functions for common PDF operations (document initialization, text formatting, adding images, page management) and specialized functions for different report types.
     - **Files**: `lib/pdf.ts`
     - **Step Dependencies**: Step 1
-- [ ]  **Step 13.3: Implement Supabase Storage Actions**
+- [x]  **Step 13.3: Implement Supabase Storage Actions**
     - **Task**: Create upload helper functions for Supabase Storage in `actions/storage/pdf-storage-actions.ts`. Implement `uploadPdfStorage` action and functions to generate signed URLs for secure downloads.
     - **Files**: `actions/storage/pdf-storage-actions.ts`
     - **Step Dependencies**: Steps 2, 3
-- [ ]  **Step 13.4: Create Basic PDF Generation Action**
+- [x]  **Step 13.4: Create Basic PDF Generation Action**
     - **Task**: Implement core structure of `generatePDFAction` with proper parameters (purchaseId, url, tier), basic flow, error handling, and database connections.
     - **Files**: `actions/pdf-actions.ts`
     - **Step Dependencies**: Steps 10, 13.1, 13.2, 13.3
-- [ ]  **Step 13.5: Implement Full AI-to-PDF Pipeline**
+- [x]  **Step 13.5: Implement Full AI-to-PDF Pipeline**
     - **Task**: Complete the full generation pipeline in `generatePDFAction`. Integrate scraped data loading, AI analysis, PDF generation, storage saving, and database updates. Implement basic retry logic for transient errors.
     - **Files**: `actions/pdf-actions.ts` (update)
     - **Step Dependencies**: Steps 12, 13.4
