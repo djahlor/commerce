@@ -9,7 +9,6 @@ import { Gallery } from 'components/product/gallery';
 import { ProductProvider } from 'components/product/product-context';
 import { ProductDescription } from 'components/product/product-description';
 import { HIDDEN_PRODUCT_TAG } from 'lib/constants';
-import { Image } from 'lib/types';
 import Link from 'next/link';
 
 // Type for image
@@ -23,19 +22,19 @@ type TrustedImage = {
 // Temporary mock product data until we implement Polar/Supabase integration
 const getMockProduct = async (handle: string) => {
   // This will be replaced with actual product data from Polar/Supabase
-  let productImage = '/keyboard.png';
+  let productImage = '/t-shirt-circles-black.png';
   let productTitle = 'E-Com Edge Kit';
   let productPrice = '149.00';
   let productId = PRODUCT_IDS.BASE_KIT;
 
   // Set different images based on the handle
   if (handle === 'full-edge-stack') {
-    productImage = '/webcam-cover.png';
+    productImage = '/t-shirt-circles-black.png';
     productTitle = 'Full Edge Stack';
     productPrice = '399.00';
     productId = PRODUCT_IDS.FULL_STACK;
   } else if (handle === 'competitor-kill-matrix') {
-    productImage = '/sticker.png';
+    productImage = '/t-shirt-circles-black.png';
     productTitle = 'Competitor Kill Matrix';
     productPrice = '199.00';
     productId = PRODUCT_IDS.UPSELLS.SEO_STRATEGY;
@@ -117,7 +116,7 @@ const getMockProductRecommendations = async () => {
       handle: 'competitor-kill-matrix',
       title: 'Competitor Kill Matrix',
       featuredImage: {
-        url: '/sticker.png',
+        url: '/t-shirt-circles-black.png',
         altText: 'Competitor Kill Matrix'
       },
       priceRange: {
@@ -132,7 +131,7 @@ const getMockProductRecommendations = async () => {
       handle: 'threat-scanner',
       title: 'Threat Scanner',
       featuredImage: {
-        url: '/sticker-rainbow.png',
+        url: '/t-shirt-circles-black.png',
         altText: 'Threat Scanner'
       },
       priceRange: {
@@ -184,13 +183,18 @@ export async function generateMetadata(props: {
   };
 }
 
-export default async function ProductPage(props: { params: Promise<{ handle: string }> }) {
-  const params = await props.params;
-  // Shopify call replaced with mock in Step 8
-  // const product = await getProduct(params.handle);
+export default async function ProductPage({
+  params
+}: {
+  params: { handle: string };
+}) {
+  // This will be replaced with a fetch to the Shopify Storefront API
   const product = await getMockProduct(params.handle);
 
   if (!product) return notFound();
+
+  // Note: This will be replaced with actual related products from Shopify
+  const relatedProducts = await getMockProductRecommendations();
 
   const productJsonLd = {
     '@context': 'https://schema.org',
@@ -226,10 +230,20 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
               }
             >
               <Gallery
-                images={product.images.slice(0, 5).map((image: Image) => ({
-                  src: image.url,
-                  altText: image.altText
-                }))}
+                images={[
+                  {
+                    src: '/t-shirt-circles-black.png',
+                    altText: product.title
+                  },
+                  {
+                    src: '/t-shirt-circles-black.png',
+                    altText: product.title
+                  },
+                  {
+                    src: '/t-shirt-circles-black.png',
+                    altText: product.title
+                  }
+                ]}
               />
             </Suspense>
           </div>

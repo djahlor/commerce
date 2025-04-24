@@ -15,7 +15,7 @@ async function getMockCollectionProducts({ collection }: { collection: string })
       title: 'E-Com Edge Kit',
       availableForSale: true,
       featuredImage: {
-        url: '/keyboard.png', // Using product image from public folder
+        url: '/t-shirt-circles-black.png', // Changed from keyboard.png
         altText: 'E-Com Edge Kit'
       },
       priceRange: {
@@ -37,7 +37,7 @@ async function getMockCollectionProducts({ collection }: { collection: string })
       title: 'Full Edge Stack',
       availableForSale: true,
       featuredImage: {
-        url: '/webcam-cover.png', // Using product image from public folder
+        url: '/t-shirt-circles-black.png', // Changed from webcam-cover.png
         altText: 'Full Edge Stack'
       },
       priceRange: {
@@ -59,7 +59,7 @@ async function getMockCollectionProducts({ collection }: { collection: string })
       title: 'Competitor Kill Matrix',
       availableForSale: true,
       featuredImage: {
-        url: '/sticker.png', // Using product image from public folder
+        url: '/t-shirt-circles-black.png', // Changed from sticker.png
         altText: 'Competitor Kill Matrix'
       },
       priceRange: {
