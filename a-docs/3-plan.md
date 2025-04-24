@@ -149,7 +149,7 @@
     - **Task**: Refactor the logic inside `components/cart/add-to-cart.tsx` (and potentially separate action functions if preferred) to dispatch updates to the *local* cart state (add item, update quantity, remove item). Remove backend calls previously made to Shopify cart API.
     - **Files**: `components/cart/add-to-cart.tsx`, `lib/store/cart-store.ts` (add actions/reducers)
     - **Step Dependencies**: Step 19, 20
-- [ ]  **Step 22: Connect Cart to Polar Checkout Action**
+- [x]  **Step 22: Connect Cart to Polar Checkout Action**
     - **Task**: Modify the "Checkout" button logic (likely within `components/cart/modal.tsx` or related checkout component). On click, it should read the current local cart state, call the `createPolarCheckoutAction` server action, and then perform a client-side redirect (`window.location.href = checkoutUrl`) using the URL returned by the action.
     - **Files**: `components/cart/modal.tsx` (or checkout button component), `actions/polar/polar-actions.ts` (call)
     - **Step Dependencies**: Steps 16, 19

@@ -1,6 +1,7 @@
 'use client';
 
 import { createPolarCheckoutAction } from '@/actions/polar/polar-actions';
+import { useToast } from '@/lib/hooks/use-toast';
 import { useCartItems, useCartStore, useCartSubtotal, useCartTotalItems } from '@/lib/store/cart-store';
 import { Dialog, Transition } from '@headlessui/react';
 import { ShoppingCartIcon, XMarkIcon } from '@heroicons/react/24/outline';
@@ -25,7 +26,9 @@ export default function CartModal() {
   const totalItems = useCartTotalItems();
   const subtotal = useCartSubtotal();
   const [isOpen, setIsOpen] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const quantityRef = useRef(totalItems);
+  const { toast } = useToast();
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);
 
@@ -45,9 +48,25 @@ export default function CartModal() {
   // Handle checkout process using Polar
   const handleCheckout = async () => {
     try {
+      // Get the latest cart items directly from the store
+      const cartItems = useCartStore.getState().items;
+      
+      // Ensure we have items to checkout with
+      if (!cartItems.length) {
+        toast({
+          title: 'Empty Cart',
+          description: 'Your cart is empty. Please add items before checkout.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      // Show loading state
+      setIsCheckingOut(true);
+      
       // Call the Polar checkout action with the cart items
       const result = await createPolarCheckoutAction({
-        items: useCartStore.getState().items.map(item => ({
+        items: cartItems.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
           url: item.url
@@ -58,12 +77,22 @@ export default function CartModal() {
         // Redirect to the Polar checkout page
         window.location.href = result.data.checkoutUrl;
       } else {
-        // Handle error
-        console.error('Checkout failed:', result.message);
-        // You could use a toast notification here
+        // Handle error with toast notification
+        toast({
+          title: 'Checkout Failed',
+          description: result.message || 'Something went wrong. Please try again.',
+          variant: 'destructive'
+        });
+        setIsCheckingOut(false);
       }
     } catch (error) {
       console.error('Error during checkout:', error);
+      toast({
+        title: 'Checkout Error',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred',
+        variant: 'destructive'
+      });
+      setIsCheckingOut(false);
     }
   };
 
@@ -232,11 +261,11 @@ export default function CartModal() {
                     </div>
                   </div>
                   <button
-                    className="block w-full rounded-full bg-blue-600 p-3 text-center text-sm font-medium text-white opacity-90 hover:opacity-100"
+                    className="block w-full rounded-full bg-blue-600 p-3 text-center text-sm font-medium text-white opacity-90 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-60"
                     onClick={handleCheckout}
-                    disabled={!items.length}
+                    disabled={!items.length || isCheckingOut}
                   >
-                    Proceed to Checkout
+                    {isCheckingOut ? 'Processing...' : 'Proceed to Checkout'}
                   </button>
                 </div>
               )}
