@@ -186,10 +186,11 @@ export async function generateMetadata(props: {
 export default async function ProductPage({
   params
 }: {
-  params: { handle: string };
+  params: Promise<{ handle: string }>;
 }) {
   // This will be replaced with a fetch to the Shopify Storefront API
-  const product = await getMockProduct(params.handle);
+  const resolvedParams = await params;
+  const product = await getMockProduct(resolvedParams.handle);
 
   if (!product) return notFound();
 
