@@ -1,20 +1,19 @@
-import type { Metadata } from 'next';
+import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 
+import { PRODUCT_IDS } from '@/lib/polar';
 import { GridTileImage } from 'components/grid/tile';
 import Footer from 'components/layout/footer';
 import { Gallery } from 'components/product/gallery';
 import { ProductProvider } from 'components/product/product-context';
 import { ProductDescription } from 'components/product/product-description';
 import { HIDDEN_PRODUCT_TAG } from 'lib/constants';
-// Shopify imports removed in Step 8 - will be replaced with Polar/Supabase/local config
-// import { getProduct, getProductRecommendations } from 'lib/shopify';
-// import { Image } from 'lib/shopify/types';
+import { Image } from 'lib/types';
 import Link from 'next/link';
-import { Suspense } from 'react';
 
-// Temporary type definition until we implement our own
-type Image = {
+// Type for image
+type TrustedImage = {
   url: string;
   altText: string;
   width?: number;
@@ -27,20 +26,23 @@ const getMockProduct = async (handle: string) => {
   let productImage = '/keyboard.png';
   let productTitle = 'E-Com Edge Kit';
   let productPrice = '149.00';
+  let productId = PRODUCT_IDS.BASE_KIT;
 
   // Set different images based on the handle
   if (handle === 'full-edge-stack') {
     productImage = '/webcam-cover.png';
     productTitle = 'Full Edge Stack';
     productPrice = '399.00';
+    productId = PRODUCT_IDS.FULL_STACK;
   } else if (handle === 'competitor-kill-matrix') {
     productImage = '/sticker.png';
     productTitle = 'Competitor Kill Matrix';
     productPrice = '199.00';
+    productId = PRODUCT_IDS.UPSELLS.SEO_STRATEGY;
   }
 
   return {
-    id: 'mock-product-id',
+    id: productId, // Using proper Polar product ID
     handle,
     title: productTitle,
     description: 'Comprehensive analysis toolkit for your e-commerce store',

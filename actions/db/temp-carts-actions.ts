@@ -11,7 +11,7 @@ import { eq, lt, sql } from 'drizzle-orm';
  */
 export async function createTempCartAction(
   cartId: string,
-  url: string,
+  url: string = '',
   additionalMetadata?: string
 ): Promise<ActionState<{ id: string; cartId: string }>> {
   try {

@@ -168,11 +168,11 @@
     - **Task**: Create `app/(auth)/success/page.tsx`. Implement the initial "Processing..." state with animation (`components/success/processing-spinner.tsx`). Add logic to check purchase status (e.g., poll Supabase based on order ID from query param) showing status updates for scraping and generation progress. Display download links (using signed URLs from Supabase storage via server action) or the dashboard prompt upon completion.
     - **Files**: `app/(auth)/success/page.tsx`, `components/success/processing-spinner.tsx`, `components/success/download-link.tsx` (fetches signed URL), `actions/storage/pdf-storage-actions.ts` (add signed URL generation).
     - **Step Dependencies**: Steps 13, 18
-- [ ]  **Step 25: Build Dashboard Structure & Layout**
+- [x]  **Step 25: Build Dashboard Structure & Layout**
     - **Task**: Create the route group `app/(auth)/dashboard/`. Create `layout.tsx` applying specific dashboard styling/navigation (potentially a sidebar like `o1-pro`'s `components/ui/sidebar.tsx` adapted). Create the main `page.tsx`.
     - **Files**: `app/(auth)/dashboard/layout.tsx`, `app/(auth)/dashboard/page.tsx`, `components/dashboard/sidebar.tsx` (optional)
     - **Step Dependencies**: Steps 5, 7
-- [ ]  **Step 26: Implement Dashboard Data Fetching & Display**
+- [x]  **Step 26: Implement Dashboard Data Fetching & Display**
     - **Task**: In `app/(auth)/dashboard/page.tsx`, fetch the authenticated user's data (using Clerk `auth()`) and call `getUserOutputsAction` to get their purchased reports from Supabase. Create and use an `OutputList` component (e.g., using Shadcn `Table`) to display the outputs with download links (generating signed URLs).
     - **Files**: `app/(auth)/dashboard/page.tsx` (update), `actions/db/outputs-actions.ts` (call), `components/dashboard/output-list.tsx`
     - **Step Dependencies**: Steps 10, 24 (signed URLs), 25

@@ -12,11 +12,13 @@ import { nanoid } from 'nanoid';
 function SubmitButton({
   availableForSale,
   selectedVariantId,
-  onClick
+  onClick,
+  disabled = false,
 }: {
   availableForSale: boolean;
   selectedVariantId: string | undefined;
   onClick: () => void;
+  disabled?: boolean;
 }) {
   const buttonClasses =
     'relative flex w-full items-center justify-center rounded-full bg-blue-600 p-4 tracking-wide text-white';
@@ -30,7 +32,7 @@ function SubmitButton({
     );
   }
 
-  if (!selectedVariantId) {
+  if (!selectedVariantId || disabled) {
     return (
       <button
         aria-label="Please select an option"
@@ -62,12 +64,13 @@ function SubmitButton({
   );
 }
 
-export function AddToCart({ product }: { product: Product }) {
+export function AddToCart({ product, websiteUrl = '' }: { product: Product; websiteUrl?: string }) {
   const { variants, availableForSale } = product;
   const { addItem } = useCartActions();
   const { state } = useProduct();
   
-  // Remove URL input value from state
+  // URL is required
+  const isUrlValid = websiteUrl.trim() !== '';
   
   // Handle different variants structure
   const productVariants = Array.isArray(variants) 
@@ -86,7 +89,7 @@ export function AddToCart({ product }: { product: Product }) {
   );
 
   const handleAddToCart = () => {
-    if (!finalVariant) return;
+    if (!finalVariant || !isUrlValid) return;
     
     // Create a cart item from the product and variant data
     addItem({
@@ -96,6 +99,7 @@ export function AddToCart({ product }: { product: Product }) {
       title: product.title,
       variantId: finalVariant.id,
       variantTitle: finalVariant.title,
+      url: websiteUrl.trim(), // Include the URL in the cart item
       price: {
         amount: finalVariant.price.amount,
         currencyCode: finalVariant.price.currencyCode
@@ -116,7 +120,13 @@ export function AddToCart({ product }: { product: Product }) {
         availableForSale={availableForSale}
         selectedVariantId={selectedVariantId}
         onClick={handleAddToCart}
+        disabled={!isUrlValid}
       />
+      {!isUrlValid && (
+        <p className="mt-2 text-center text-sm text-red-500">
+          Please enter your website URL above
+        </p>
+      )}
     </div>
   );
 }

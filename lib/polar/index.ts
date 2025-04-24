@@ -58,13 +58,14 @@ export const verifyWebhookSignature = (
   }
 };
 
-// Product IDs - these should be updated with your actual Polar product IDs
+// Product IDs - using environment variables
 export const PRODUCT_IDS = {
-  BASE_KIT: 'base_kit', // Update with actual ID from Polar dashboard
-  FULL_STACK: 'full_stack', // Update with actual ID
+  // Using environment variables for Polar product IDs
+  BASE_KIT: process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_BASE_KIT || '606a3e6a-09c0-46fb-9f4e-d3375668b714', // Edge Kit™
+  FULL_STACK: process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_FULL_STACK || '045b8bd4-cb2e-4a9d-805d-8ad9be14ff4c', // Edge Stack™
   UPSELLS: {
-    SEO_STRATEGY: 'seo_strategy', // Update with actual ID
-    CONTENT_STRATEGY: 'content_strategy', // Update with actual ID
-    CUSTOMER_PERSONA: 'customer_persona', // Update with actual ID
+    SEO_STRATEGY: process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_SEO_STRATEGY || '', // Replace with actual UUID when available
+    CONTENT_STRATEGY: process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_CONTENT_STRATEGY || '', // Replace with actual UUID when available
+    CUSTOMER_PERSONA: process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_CUSTOMER_PERSONA || '', // Replace with actual UUID when available
   },
 }; 
