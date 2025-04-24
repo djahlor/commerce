@@ -1,6 +1,7 @@
 # Implenetation Plan
 
 ### Phase 1: Setup
+
 - [x]  **Step 1: Initialize Next.js Commerce & Core Dependencies**
     - **Task**: Clone the Vercel Next.js Commerce starter kit. Install *all* required additional dependencies: Polar SDK (`@polar.sh/sdk` or similar), Supabase (`@supabase/supabase-js`), Clerk (`@clerk/nextjs`), Drizzle (`drizzle-orm`, `postgres`, `drizzle-kit`), OpenAI (`openai`), Resend (`resend`), PDF library (`pdfkit`), state management (`zustand` or `jotai` - choose one for cart), `react-hook-form`, `zod`, **Firecrawl** (`@mendable/firecrawl-js`), **Vercel AI SDK** (`ai`).
     - **Files**: `package.json`
@@ -82,6 +83,7 @@
     - **Task**: Set up PDFKit helpers in `lib/pdf.ts`. Create wrapper functions for common PDF operations (document initialization, text formatting, adding images, page management) and specialized functions for different report types.
     - **Files**: `lib/pdf.ts`
     - **Step Dependencies**: Step 1
+    - **Note**: ✅ Implemented using `@react-pdf/pdfkit` instead of standard `pdfkit` to solve font bundling issues in serverless environments. This approach ensures proper font loading without filesystem access limitations. Created a robust solution with createPDFDocument for initialization, and specialized functions for Brand Blueprint, Technical Audit, SEO Analysis, Marketing Strategy, Customer Persona, and Content Strategy reports.
 - [x]  **Step 13.3: Implement Supabase Storage Actions**
     - **Task**: Create upload helper functions for Supabase Storage in `actions/storage/pdf-storage-actions.ts`. Implement `uploadPdfStorage` action and functions to generate signed URLs for secure downloads.
     - **Files**: `actions/storage/pdf-storage-actions.ts`
@@ -95,7 +97,7 @@
     - **Files**: `actions/pdf-actions.ts` (update)
     - **Step Dependencies**: Steps 12, 13.4
     - **Mitigation**: Test with sample scraped data to ensure consistent AI outputs.
-- [ ]  **Step 14: Implement Email Action**
+- [x]  **Step 14: Implement Email Action**
     - **Task**: Set up Resend client/helpers (`lib/resend.ts` or similar). Create `sendDownloadEmailAction` (`actions/email-actions.ts`) to send confirmation/link emails.
     - **Files**: `lib/resend.ts`, `actions/email-actions.ts`
     - **Step Dependencies**: Steps 1, 2
@@ -106,23 +108,23 @@
 
 *Goal: Integrate the payment and order processing backend.*
 
-- [ ]  **Step 15: Setup Polar SDK & Products**
+- [x]  **Step 15: Setup Polar SDK & Products**
     - **Task**: Initialize Polar SDK client (`lib/polar/index.ts`).
     - **Files**: `lib/polar/index.ts`
     - **User Instructions**: Define your products (Base Kit, Full Stack, Upsells) in the Polar Dashboard. Note down the Product IDs.
     - **Step Dependencies**: Steps 1, 2
-- [ ]  **Step 16: Implement Polar Checkout Action**
+- [x]  **Step 16: Implement Polar Checkout Action**
     - **Task**: Create `createPolarCheckoutAction` (`actions/polar/polar-actions.ts`). This action takes formatted cart data (including item details and URL metadata), calls `polar.checkouts.create`, handles potential metadata workaround (saving to `temp_carts` via DB action), and returns the checkout URL.
     - **Files**: `actions/polar/polar-actions.ts`, `actions/db/purchases-actions.ts` (add temp cart actions if needed)
     - **Step Dependencies**: Steps 10, 15
     - **Mitigation**: Thoroughly test metadata passing. If workaround is needed, ensure `temp_carts` cleanup logic exists.
-- [ ]  **Step 17: Implement Polar Webhook Handler**
+- [x]  **Step 17: Implement Polar Webhook Handler**
     - **Task**: Create the API route `app/api/webhooks/polar/route.ts`. Implement signature verification using Polar SDK. Parse the `order.succeeded` event payload. Extract relevant data (order ID, email, items, metadata/tempCartId).
     - **Files**: `app/api/webhooks/polar/route.ts`, `lib/polar/index.ts` (add webhook helpers if needed)
     - **User Instructions**: Configure the webhook endpoint URL in the Polar Dashboard.
     - **Step Dependencies**: Steps 2, 15
     - **Mitigation**: Test signature verification thoroughly. Log incoming payloads during development.
-- [ ]  **Step 18: Connect Webhook to Scraping Logic**
+- [x]  **Step 18: Connect Webhook to Scraping Logic**
     - **Task**: Update the webhook handler to: retrieve full cart details if using workaround, call `createPurchaseAction` to save to Supabase `purchases` (with status 'pending_scrape'), then trigger `triggerScrapeAction` for the customer's URL. Ensure immediate 200 response to Polar after verification/trigger. Implement idempotency check.
     - **Files**: `app/api/webhooks/polar/route.ts` (update), `actions/db/purchases-actions.ts` (call), `actions/scrape-actions.ts` (trigger)
     - **Step Dependencies**: Steps 10, 12, 17
@@ -134,16 +136,16 @@
 
 *Goal: Make the Next.js Commerce cart work with local state and Polar.*
 
-- [ ]  **Step 19: Implement Local Cart State Management**
+- [x]  **Step 19: Implement Local Cart State Management**
     - **Task**: Choose and implement a local state solution (e.g., Zustand store or React Context Provider in `app/layout.tsx` or a dedicated provider). Define the cart state structure (array of items with `productId`, `quantity`, `price`, `url`, etc.). Initialize state potentially from `localStorage` for persistence.
     - **Files**: `lib/store/cart-store.ts` (or similar context file), `app/layout.tsx` (add provider)
     - **Step Dependencies**: Step 1
-- [ ]  **Step 20: Adapt Cart UI Components**
+- [x]  **Step 20: Adapt Cart UI Components**
     - **Task**: Modify `components/cart/modal.tsx` and any related components (item display) to read data from the local cart state hook/context instead of the old Shopify context. Ensure totals are calculated correctly based on local state.
     - **Files**: `components/cart/modal.tsx`, `components/cart/delete-item-button.tsx`, `components/cart/edit-item-quantity-button.tsx`
     - **Step Dependencies**: Step 19
     - **Mitigation**: This requires careful refactoring of data sources within the components. Test UI updates thoroughly.
-- [ ]  **Step 21: Adapt Cart Actions**
+- [x]  **Step 21: Adapt Cart Actions**
     - **Task**: Refactor the logic inside `components/cart/add-to-cart.tsx` (and potentially separate action functions if preferred) to dispatch updates to the *local* cart state (add item, update quantity, remove item). Remove backend calls previously made to Shopify cart API.
     - **Files**: `components/cart/add-to-cart.tsx`, `lib/store/cart-store.ts` (add actions/reducers)
     - **Step Dependencies**: Step 19, 20

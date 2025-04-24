@@ -73,10 +73,10 @@ export async function uploadPdfStorage(
  * @param expiresIn Optional expiration time in seconds (default: 1 hour)
  * @returns ActionState with the signed URL if successful
  */
-export async function getSignedUrlAction(
+export async function createSignedUrl(
   filePath: string,
   expiresIn = 3600 // Default expiration: 1 hour
-): Promise<ActionState<{ url: string }>> {
+): Promise<ActionState<{ signedUrl: string }>> {
   try {
     // Generate a signed URL with specified expiration
     const { data, error } = await supabase
@@ -103,17 +103,20 @@ export async function getSignedUrlAction(
       isSuccess: true,
       message: "Signed URL generated successfully",
       data: {
-        url: data.signedUrl
+        signedUrl: data.signedUrl
       }
     };
   } catch (error) {
-    console.error('Error in getSignedUrlAction:', error);
+    console.error('Error in createSignedUrl:', error);
     return {
       isSuccess: false,
       message: "An unexpected error occurred. Please try again later."
     };
   }
 }
+
+// Keeping this for backward compatibility
+export const getSignedUrlAction = createSignedUrl;
 
 /**
  * Deletes a PDF from Supabase Storage

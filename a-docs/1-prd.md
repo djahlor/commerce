@@ -144,3 +144,7 @@ The "E-Com Edge Kit" is a premium web platform designed to deliver high-value, A
 ---
 
 This updated PRD reflects the hybrid strategy, clearly stating the roles of Next.js Commerce, Polar, Supabase, Clerk, and `o1-pro` patterns. It addresses the multi-item cart need and the plan to adapt existing components while integrating new services. Ready for the updated Tech Spec?
+
+---
+
+**Note on PDF Generation Implementation:** Based on testing, we've selected `@react-pdf/pdfkit` over standard `pdfkit` for PDF generation as it properly bundles font files required for PDF creation in server environments. This ensures consistent and reliable PDF generation across development and production environments without font-related failures.

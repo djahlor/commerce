@@ -2,20 +2,21 @@
 
 import { PlusIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
-import { addItem } from 'components/cart/actions';
 import { useProduct } from 'components/product/product-context';
 // Shopify imports removed in Step 8 - will be replaced with custom types
 // import { Product, ProductVariant } from 'lib/shopify/types';
+import { useCartActions } from '@/lib/store/cart-store';
 import { Product, ProductVariant } from 'lib/types';
-import { useActionState } from 'react';
-import { useCart } from './cart-context';
+import { nanoid } from 'nanoid';
 
 function SubmitButton({
   availableForSale,
-  selectedVariantId
+  selectedVariantId,
+  onClick
 }: {
   availableForSale: boolean;
   selectedVariantId: string | undefined;
+  onClick: () => void;
 }) {
   const buttonClasses =
     'relative flex w-full items-center justify-center rounded-full bg-blue-600 p-4 tracking-wide text-white';
@@ -50,6 +51,8 @@ function SubmitButton({
       className={clsx(buttonClasses, {
         'hover:opacity-90': true
       })}
+      onClick={onClick}
+      type="button"
     >
       <div className="absolute left-0 ml-4">
         <PlusIcon className="h-5" />
@@ -61,9 +64,11 @@ function SubmitButton({
 
 export function AddToCart({ product }: { product: Product }) {
   const { variants, availableForSale } = product;
-  const { addCartItem } = useCart();
+  const { addItem } = useCartActions();
   const { state } = useProduct();
-  const [message, formAction] = useActionState(addItem, null);
+  
+  // Get URL input value from state (this will be used for website analysis products)
+  const url = state.url as string | undefined;
 
   // Handle different variants structure
   const productVariants = Array.isArray(variants) 
@@ -77,39 +82,43 @@ export function AddToCart({ product }: { product: Product }) {
   );
   const defaultVariantId = productVariants.length === 1 ? productVariants[0]?.id : undefined;
   const selectedVariantId = variant?.id || defaultVariantId;
-  const addItemAction = formAction.bind(null, selectedVariantId);
   const finalVariant = productVariants.find(
     (variant) => variant.id === selectedVariantId
-  )!;
+  );
 
-  // Prepare a compatible product object for the cart context
-  const cartProduct = {
-    id: product.id,
-    handle: product.handle,
-    title: product.title,
-    featuredImage: {
-      ...product.featuredImage,
-      // Ensure width and height are numbers for cart compatibility
-      width: product.featuredImage.width || 0,
-      height: product.featuredImage.height || 0
-    }
+  const handleAddToCart = () => {
+    if (!finalVariant) return;
+    
+    // Create a cart item from the product and variant data
+    addItem({
+      id: nanoid(), // Generate a unique ID for the cart item
+      productId: product.id,
+      handle: product.handle,
+      title: product.title,
+      variantId: finalVariant.id,
+      variantTitle: finalVariant.title,
+      price: {
+        amount: finalVariant.price.amount,
+        currencyCode: finalVariant.price.currencyCode
+      },
+      url, // Add the URL from the URL input (for website analysis products)
+      image: product.featuredImage && {
+        url: product.featuredImage.url,
+        altText: product.featuredImage.altText,
+        width: typeof product.featuredImage.width === 'number' ? product.featuredImage.width : undefined,
+        height: typeof product.featuredImage.height === 'number' ? product.featuredImage.height : undefined
+      },
+      options: finalVariant.selectedOptions
+    });
   };
 
   return (
-    <form
-      action={async () => {
-        // Use the compatible product object instead of the original product
-        addCartItem(finalVariant, cartProduct);
-        addItemAction();
-      }}
-    >
+    <div>
       <SubmitButton
         availableForSale={availableForSale}
         selectedVariantId={selectedVariantId}
+        onClick={handleAddToCart}
       />
-      <p aria-live="polite" className="sr-only" role="status">
-        {message}
-      </p>
-    </form>
+    </div>
   );
 }

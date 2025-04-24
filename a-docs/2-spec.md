@@ -306,6 +306,34 @@
 - **`lib/ai.ts`**:
     - Configures Vercel AI SDK with OpenAI.
     - Exports functions for text generation and processing.
+- **`lib/pdf.ts`**:
+    - Uses `@react-pdf/pdfkit` instead of standard `pdfkit` to ensure font files are properly bundled and accessible in server environment.
+    - This solves font-loading issues in serverless environments where access to the file system for font files is constrained.
+    - Provides a comprehensive set of wrapper functions for PDF operations:
+      - `createPDFDocument`: Creates a new PDF document with standard settings, including page size, margins, and default font settings
+      - `addTitle`: Adds a formatted title with proper styling, spacing, and font size
+      - `addSubtitle`: Adds a formatted subtitle with appropriate styling and spacing
+      - `addText`: Adds body text with proper paragraph formatting and line wrapping
+      - `addList`: Adds bulleted or numbered lists with proper indentation and formatting
+      - `addTable`: Adds data tables with proper column alignment and header formatting
+      - `addPageBreak`: Inserts a page break when needed
+      - `finalizePDF`: Converts the document to a Buffer for storage/download
+    - Implements specialized report generation functions for each report type:
+      - `createBlueprintReport`: Generates the comprehensive Brand Blueprint PDF
+      - `createMarketingReport`: Generates the Marketing Strategy PDF
+      - `createContentReport`: Generates the Content Strategy PDF
+      - `createTechnicalReport`: Generates the Technical Recommendations PDF
+      - `createPersonaReport`: Generates the Buyer Persona Analysis PDF
+      - `createSEOReport`: Generates the SEO Analysis PDF
+    - Each specialized report function follows a consistent pattern:
+      1. Create a new PDF document using `createPDFDocument`
+      2. Add a branded header and introduction section
+      3. Process each section of generated content using the appropriate helper functions
+      4. Add section headings, formatted text, lists, and tables as needed
+      5. Include appropriate page breaks between major sections
+      6. Finalize and return the PDF as a Buffer for storage
+    - The module isolates PDF formatting logic from content generation, making it easier to update design, branding, or formatting without changing content logic
+    - Key technical consideration: The module carefully manages text measurement and positioning to handle dynamic content while maintaining consistent layout
 
 ## 6. Design System & UI (Hybrid)
 

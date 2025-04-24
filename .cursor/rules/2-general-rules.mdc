@@ -8,6 +8,7 @@ alwaysApply: true
 
 ## Run 
 - we use pnpm 
+- our .env.local is setup for this project. you can ask the user if this is true, but you should take their word for it.
 
 ## Imports
 

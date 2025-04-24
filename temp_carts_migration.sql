@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS temp_carts (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), cart_id TEXT NOT NULL UNIQUE, url TEXT, metadata TEXT, created_at TIMESTAMP NOT NULL DEFAULT NOW(), expires_at TIMESTAMP NOT NULL);

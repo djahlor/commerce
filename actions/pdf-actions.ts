@@ -6,7 +6,8 @@ import { ActionState } from '@/types';
 import { createOutputAction } from './db/outputs-actions';
 import { getPurchaseByIdAction, updatePurchaseStatusAction } from './db/purchases-actions';
 import { getScrapedDataByPurchaseIdAction } from './db/scraped-data-actions';
-import { uploadPdfStorage } from './storage/pdf-storage-actions';
+import { sendDownloadEmailAction } from './email-actions';
+import { createSignedUrl, uploadPdfStorage } from './storage/pdf-storage-actions';
 
 // PDF types that can be generated for different tiers
 export type PDFType = 'blueprint' | 'personas' | 'seo' | 'marketing' | 'content' | 'technical';
@@ -23,6 +24,7 @@ const MAX_UPLOAD_RETRIES = 2;
  * 3. Store PDFs in Supabase Storage
  * 4. Create output records
  * 5. Update purchase status
+ * 6. Send email with download links
  * 
  * @param purchaseId The ID of the purchase to generate PDFs for
  * @param tier The tier of the purchase (determines which PDFs to generate)
@@ -46,6 +48,7 @@ export async function generatePDFAction(
     
     const purchase = purchaseResult.data;
     const url = purchase.url;
+    const customerEmail = purchase.customerEmail;
     
     // Update status to indicate generation is in progress
     await updatePurchaseStatusAction(purchaseId, 'processing');
@@ -159,6 +162,46 @@ export async function generatePDFAction(
         // If we have at least some outputs, consider it a success even if some failed
         await updatePurchaseStatusAction(purchaseId, 'completed');
         
+        // Generate signed URLs for each output for the email
+        const outputsWithUrls = await Promise.all(
+          outputs.map(async (output) => {
+            try {
+              const signedUrlResult = await createSignedUrl(output.filePath);
+              return {
+                type: output.type,
+                downloadUrl: signedUrlResult.isSuccess && signedUrlResult.data 
+                  ? signedUrlResult.data.signedUrl 
+                  : '#' // Fallback if URL creation fails
+              };
+            } catch (error) {
+              console.error(`Failed to create signed URL for ${output.type}:`, error);
+              return {
+                type: output.type,
+                downloadUrl: '#' // Fallback URL
+              };
+            }
+          })
+        );
+        
+        // Send download email with links to all generated PDFs
+        if (customerEmail && outputsWithUrls.length > 0) {
+          try {
+            const emailResult = await sendDownloadEmailAction(
+              customerEmail,
+              outputsWithUrls,
+              purchase
+            );
+            
+            if (!emailResult.isSuccess) {
+              console.warn(`Email sending failed but PDFs were generated: ${emailResult.message}`);
+              // Non-critical error, don't fail the whole operation
+            }
+          } catch (emailError: any) {
+            console.error('Failed to send download email:', emailError);
+            // Non-critical error, don't fail the whole operation
+          }
+        }
+        
         // If there were some errors but we still produced outputs
         if (errors.length > 0) {
           return {
@@ -176,6 +219,21 @@ export async function generatePDFAction(
       } else {
         // If no outputs were created, it's a failure
         await updatePurchaseStatusAction(purchaseId, 'generation_failed');
+        
+        // Optionally send failure notification email
+        if (customerEmail) {
+          try {
+            await sendDownloadEmailAction(
+              customerEmail,
+              [], // No outputs
+              purchase
+            );
+          } catch (emailError) {
+            console.error('Failed to send failure notification email:', emailError);
+            // Non-critical error, don't fail the whole operation
+          }
+        }
+        
         return {
           isSuccess: false,
           message: `Failed to generate any PDFs. Errors: ${errors.join('; ')}`
@@ -308,7 +366,7 @@ async function getAnalysisForType(type: PDFType, content: string, existingAnalys
 }
 
 /**
- * Generates a PDF with retry logic
+ * Retries the PDF generation process with the specified number of attempts
  */
 async function generatePDFWithRetry(
   type: PDFType,
@@ -317,21 +375,49 @@ async function generatePDFWithRetry(
 ): Promise<ActionState<{ buffer: Buffer; filePath?: string }>> {
   return retryOperation(
     async () => {
-      switch (type) {
-        case 'blueprint':
-          return createBlueprintReport(analysis, purchaseId);
-        case 'personas':
-          return createPersonaReport(analysis, purchaseId);
-        case 'seo':
-          return createSEOReport(analysis, purchaseId);
-        case 'marketing':
-          return createMarketingReport(analysis, purchaseId);
-        case 'content':
-          return createContentReport(analysis, purchaseId);
-        case 'technical':
-          return createTechnicalReport(analysis, purchaseId);
-        default:
-          throw new Error(`Unsupported PDF type: ${type}`);
+      try {
+        let pdfBuffer: Buffer;
+        
+        // Generate the PDF based on type
+        switch (type) {
+          case 'blueprint':
+            pdfBuffer = await createBlueprintReport(analysis, purchaseId);
+            break;
+          case 'personas':
+            pdfBuffer = await createPersonaReport(analysis, purchaseId);
+            break;
+          case 'seo':
+            pdfBuffer = await createSEOReport(analysis, purchaseId);
+            break;
+          case 'marketing':
+            pdfBuffer = await createMarketingReport(analysis, purchaseId);
+            break;
+          case 'content':
+            pdfBuffer = await createContentReport(analysis, purchaseId);
+            break;
+          case 'technical':
+            pdfBuffer = await createTechnicalReport(analysis, purchaseId);
+            break;
+          default:
+            return {
+              isSuccess: false,
+              message: `Unknown PDF type: ${type}`
+            };
+        }
+        
+        return {
+          isSuccess: true,
+          message: `Successfully generated ${type} PDF`,
+          data: {
+            buffer: pdfBuffer
+          }
+        };
+      } catch (error: any) {
+        console.error(`Error generating ${type} PDF:`, error);
+        return {
+          isSuccess: false,
+          message: `Error generating ${type} PDF: ${error.message || 'Unknown error'}`
+        };
       }
     },
     MAX_PDF_RETRIES,

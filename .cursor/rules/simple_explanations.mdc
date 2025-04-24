@@ -1,0 +1,56 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Always Include Simple Explanations
+
+When finishing a complex implementation step, always include a simple explanation section that:
+
+- **Uses plain language** that anyone can understand
+- **Avoids technical jargon** unless absolutely necessary
+- **Explains the "why"** not just the "what" or "how"
+- **Summarizes the problem and solution** in 2-3 simple sentences
+- **Uses analogies** where appropriate to make concepts tangible
+
+## Simple Explanation Template
+
+End your implementation with a clear summary like this:
+
+```markdown
+## Simple Explanation
+
+We fixed [problem] by [solution approach]. This was needed because [reason].
+
+What we did:
+1. First, we [simple explanation of step 1]
+2. Then, we [simple explanation of step 2]
+3. Finally, we [simple explanation of step 3]
+
+This helps [benefit in plain terms].
+```
+
+## Examples
+
+### ✅ DO: Simple API Explanation
+
+```markdown
+## Simple Explanation
+
+We created a way to save cart information temporarily. This was needed because our payment system couldn't handle long website addresses.
+
+What we did:
+1. Made a storage box in the database to keep website addresses
+2. Created a small ID code for each cart that's easy to share
+3. Added cleanup so old information gets removed
+
+This helps us analyze customer websites even when their addresses are very long.
+```
+
+### ❌ DON'T: Technical-Heavy Explanation
+
+```markdown
+## Explanation
+
+Implemented a temp_carts schema with PostgreSQL for storing cart metadata that exceeds the Polar webhook character limits. Implemented CRUD operations via server actions with proper error handling and TypeScript types. Added cleanup logic with expiration timestamps.
+```
