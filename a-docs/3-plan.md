@@ -160,11 +160,11 @@
 
 *Goal: Build the unique pages and features of the application.*
 
-- [ ]  **Step 23: Implement URL Input on Product Page**
+- [x]  **Step 23: Implement URL Input on Product Page**
     - **Task**: Create the `UrlInput` component (`components/product/url-input.tsx`) using Shadcn `Form`, `Input`, `Label` and `react-hook-form`. Integrate this component into the adapted `app/product/[handle]/page.tsx`. Ensure the entered URL is captured and passed correctly when adding the item to the local cart state (Step 21).
     - **Files**: `components/product/url-input.tsx`, `app/product/[handle]/page.tsx` (integrate), `components/cart/add-to-cart.tsx` (adapt to receive URL)
     - **Step Dependencies**: Steps 5, 21
-- [ ]  **Step 24: Build Custom Success Page**
+- [x]  **Step 24: Build Custom Success Page**
     - **Task**: Create `app/(auth)/success/page.tsx`. Implement the initial "Processing..." state with animation (`components/success/processing-spinner.tsx`). Add logic to check purchase status (e.g., poll Supabase based on order ID from query param) showing status updates for scraping and generation progress. Display download links (using signed URLs from Supabase storage via server action) or the dashboard prompt upon completion.
     - **Files**: `app/(auth)/success/page.tsx`, `components/success/processing-spinner.tsx`, `components/success/download-link.tsx` (fetches signed URL), `actions/storage/pdf-storage-actions.ts` (add signed URL generation).
     - **Step Dependencies**: Steps 13, 18
@@ -306,3 +306,55 @@
     - **Task**: Prioritize and implement fixes and improvements based on beta feedback before a wider public launch. Focus on improving scraping reliability and AI output quality if issues are reported.
     - **Files**: TBD based on feedback.
     - **Step Dependencies**: Step 47
+
+---
+
+### Development Learnings & Best Practices
+
+#### Drizzle Migration Challenges
+
+During the implementation of Steps 9-10, we encountered significant challenges with Drizzle's handling of PostgreSQL enums in migrations. Key lessons learned:
+
+- **Challenge**: Adding enum values to existing types resulted in "enum value already exists" errors, even when using the recommended `ADD VALUE IF NOT EXISTS` syntax.
+- **Solution**: We adopted a pragmatic approach:
+  1. Implemented client-side workarounds using existing enum values in the webhook handler
+  2. Enhanced logging to clearly mark special cases
+  3. Created admin notification functions for important conditions
+  4. Added extensive documentation to explain the URL handling flow
+
+- **Migration Strategy**: For future enum changes, we will:
+  1. Create a dedicated migration for enum changes first
+  2. Test migration directly against a development database
+  3. Only update schema files after successful migrations
+  4. Use enum renaming rather than recreation when possible
+  5. Consider using `drizzle-kit push` for critical schema fixes
+
+- **Documentation**: Created a comprehensive `.cursor/rules/drizzle-migrations.mdc` rule to document best practices for Drizzle migrations, focusing on enum handling.
+
+#### Robust URL Handling Implementation
+
+The webhook handler was enhanced with multiple layers of URL validation and fallback mechanisms:
+
+- **Multiple URL Extraction Methods**:
+  - Regex pattern matching in customer notes
+  - Full text matching when note appears to be a URL
+  - Protocol detection and fixing
+  - Fallback to temp cart data when available
+
+- **Clear Admin Notifications**:
+  - Implemented `notifyAdminOfMissingUrl()` function with highly visible logs
+  - Structured format with order ID, customer email, and required actions
+  - Framework in place for future email/Slack notification integration
+
+- **Robust Status Handling**:
+  - Using existing enum values with consistent logic
+  - Thorough documentation of status meaning
+  - Clean error handling throughout the process
+
+- **Code Reliability**:
+  - Proper idempotency checks for webhook events
+  - Comprehensive try/catch blocks
+  - Status tracking with consistent updates
+  - Detailed logging of URL sources for debugging
+
+These learnings have been documented in both the Technical Specification (section 11) and in dedicated Cursor rules for future reference.

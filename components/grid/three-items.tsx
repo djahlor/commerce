@@ -15,7 +15,7 @@ async function getMockCollectionProducts({ collection }: { collection: string })
       title: 'E-Com Edge Kit',
       availableForSale: true,
       featuredImage: {
-        url: 'https://placehold.co/800x600',
+        url: '/keyboard.png', // Using product image from public folder
         altText: 'E-Com Edge Kit'
       },
       priceRange: {
@@ -37,7 +37,7 @@ async function getMockCollectionProducts({ collection }: { collection: string })
       title: 'Full Edge Stack',
       availableForSale: true,
       featuredImage: {
-        url: 'https://placehold.co/600x400',
+        url: '/webcam-cover.png', // Using product image from public folder
         altText: 'Full Edge Stack'
       },
       priceRange: {
@@ -59,7 +59,7 @@ async function getMockCollectionProducts({ collection }: { collection: string })
       title: 'Competitor Kill Matrix',
       availableForSale: true,
       featuredImage: {
-        url: 'https://placehold.co/600x400',
+        url: '/sticker.png', // Using product image from public folder
         altText: 'Competitor Kill Matrix'
       },
       priceRange: {
@@ -131,7 +131,7 @@ export async function ThreeItemGrid() {
   const [firstProduct, secondProduct, thirdProduct] = homepageItems;
 
   return (
-    <section className="mx-auto grid max-w-(--breakpoint-2xl) gap-4 px-4 pb-4 md:grid-cols-6 md:grid-rows-2 lg:max-h-[calc(100vh-200px)]">
+    <section className="grid w-full gap-8 md:grid-cols-6 md:grid-rows-2 h-full md:min-h-[600px] lg:min-h-[700px]">
       <ThreeItemGridItem size="full" item={firstProduct} priority={true} />
       <ThreeItemGridItem size="half" item={secondProduct} priority={true} />
       <ThreeItemGridItem size="half" item={thirdProduct} />

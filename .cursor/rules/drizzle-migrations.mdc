@@ -1,0 +1,91 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Drizzle Migrations Best Practices
+
+## Enum Type Management
+
+- **Avoid Direct Enum Value Additions in Schema**
+  - ❌ **DON'T:** Add new enum values directly to the schema and hope migrations work correctly
+    ```typescript
+    // Risky approach - can lead to migration failures
+    export const statusEnum = pgEnum("status", [
+      "processing",
+      "new_status", // Adding this can cause migration issues
+      "completed"
+    ]);
+    ```
+  
+  - ✅ **DO:** Generate a dedicated migration for enum changes first, then update schema
+    ```typescript
+    // Step 1: Keep schema as-is
+    export const statusEnum = pgEnum("status", ["processing", "completed"]);
+    
+    // Step a: Run drizzle-kit generate specifically for enum
+    // Step 3: Only after migration succeeds, update the schema
+    ```
+
+- **Using pgEnum IF NOT EXISTS in Migrations**
+  - New enum values should be added using the Postgres `ADD VALUE IF NOT EXISTS` syntax with proper error handling
+  - ✅ **CORRECT PATTERN:**
+    ```sql
+    DO $$ BEGIN
+      ALTER TYPE "status" ADD VALUE IF NOT EXISTS 'new_status';
+    EXCEPTION
+      WHEN duplicate_object THEN null;
+    END $$;
+    ```
+
+- **Prefer Enum Renaming Over Recreation**
+  - When drizzle-kit generate asks if an enum should be created or renamed from another enum, prefer **rename** if preserving data is important
+  - This avoids column type changes that require data migration
+
+- **Verify Migrations in Non-Production First**
+  - Always test enum changes in development before applying to production
+  - Be prepared with rollback plans for enum modifications
+
+## Pragmatic Approach to Enum Issues
+
+- **Implement Fallback Status Handling**
+  - ✅ **DO:** Design code to handle missing enum values gracefully
+    ```typescript
+    // Instead of requiring a new enum value
+    status: missingUrl ? existingFallbackStatus : regularStatus,
+    ```
+
+- **Use Strong Logging for Special Cases**
+  - Implement clear, visible logging when using fallback statuses
+    ```typescript
+    console.warn(`⚠️ Special condition detected. Using fallback status: ${fallbackStatus}`);
+    ```
+  
+- **Admin Notifications for Edge Cases**
+  - Create notification functions for important status conditions
+    ```typescript
+    async function notifyAdminOfSpecialCondition(id, details) {
+      console.error(`
+        ⚠️⚠️⚠️ ADMIN NOTIFICATION ⚠️⚠️⚠️
+        Item ${id} requires attention
+        Details: ${details}
+        Action needed: Manual review
+        ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+      `);
+      // Future: Send email/Slack notification
+    }
+    ```
+
+## Migration Conflict Resolution
+
+- **Resolution for Duplicate Migrations**
+  - If multiple migrations with same numbering exist (e.g., `0004_some_name.sql` and `0004_other_name.sql`):
+    1. Create a consolidated migration with higher number
+    2. Manually test SQL commands directly if needed
+    3. Consider using `drizzle-kit push` as a last resort for schema sync
+
+- **Handling Broken Migrations**
+  - If migrations are stuck or conflicting:
+    1. Document current schema state from production
+    2. Create a fresh schema file matching current production
+    3. Generate a clean migration to apply new changes only

@@ -24,38 +24,53 @@ type Image = {
 // Temporary mock product data until we implement Polar/Supabase integration
 const getMockProduct = async (handle: string) => {
   // This will be replaced with actual product data from Polar/Supabase
+  let productImage = '/keyboard.png';
+  let productTitle = 'E-Com Edge Kit';
+  let productPrice = '149.00';
+
+  // Set different images based on the handle
+  if (handle === 'full-edge-stack') {
+    productImage = '/webcam-cover.png';
+    productTitle = 'Full Edge Stack';
+    productPrice = '399.00';
+  } else if (handle === 'competitor-kill-matrix') {
+    productImage = '/sticker.png';
+    productTitle = 'Competitor Kill Matrix';
+    productPrice = '199.00';
+  }
+
   return {
     id: 'mock-product-id',
     handle,
-    title: 'E-Com Edge Kit',
+    title: productTitle,
     description: 'Comprehensive analysis toolkit for your e-commerce store',
     descriptionHtml: '<p>Comprehensive analysis toolkit for your e-commerce store</p>',
     featuredImage: {
-      url: 'https://placehold.co/600x400',
-      altText: 'E-Com Edge Kit',
-      width: 600,
-      height: 400
+      url: productImage,
+      altText: productTitle,
+      width: 800,
+      height: 800
     },
     images: [
       {
-        url: 'https://placehold.co/600x400',
-        altText: 'E-Com Edge Kit',
-        width: 600,
-        height: 400
+        url: productImage,
+        altText: productTitle,
+        width: 800,
+        height: 800
       }
     ],
     priceRange: {
       minVariantPrice: {
-        amount: '149.00',
+        amount: productPrice,
         currencyCode: 'USD'
       },
       maxVariantPrice: {
-        amount: '149.00',
+        amount: productPrice,
         currencyCode: 'USD'
       }
     },
     seo: {
-      title: 'E-Com Edge Kit - Save Your Store',
+      title: `${productTitle} - Save Your Store`,
       description: 'AI-generated insights to help your e-commerce business thrive'
     },
     tags: [],
@@ -74,7 +89,7 @@ const getMockProduct = async (handle: string) => {
               }
             ],
             price: {
-              amount: '149.00',
+              amount: productPrice,
               currencyCode: 'USD'
             }
           }
@@ -100,7 +115,7 @@ const getMockProductRecommendations = async () => {
       handle: 'competitor-kill-matrix',
       title: 'Competitor Kill Matrix',
       featuredImage: {
-        url: 'https://placehold.co/600x400',
+        url: '/sticker.png',
         altText: 'Competitor Kill Matrix'
       },
       priceRange: {
@@ -115,7 +130,7 @@ const getMockProductRecommendations = async () => {
       handle: 'threat-scanner',
       title: 'Threat Scanner',
       featuredImage: {
-        url: 'https://placehold.co/600x400',
+        url: '/sticker-rainbow.png',
         altText: 'Threat Scanner'
       },
       priceRange: {

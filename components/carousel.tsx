@@ -14,7 +14,7 @@ async function getMockCollectionProducts({ collection }: { collection: string })
       title: 'E-Com Edge Kit',
       availableForSale: true,
       featuredImage: {
-        url: 'https://placehold.co/600x400',
+        url: '/mug-1.png',
         altText: 'E-Com Edge Kit'
       },
       priceRange: {
@@ -36,7 +36,7 @@ async function getMockCollectionProducts({ collection }: { collection: string })
       title: 'Full Edge Stack',
       availableForSale: true,
       featuredImage: {
-        url: 'https://placehold.co/600x400',
+        url: '/mug-2.png',
         altText: 'Full Edge Stack'
       },
       priceRange: {
@@ -58,7 +58,7 @@ async function getMockCollectionProducts({ collection }: { collection: string })
       title: 'Competitor Kill Matrix',
       availableForSale: true,
       featuredImage: {
-        url: 'https://placehold.co/600x400',
+        url: '/cup-white.png',
         altText: 'Competitor Kill Matrix'
       },
       priceRange: {

@@ -2,26 +2,30 @@
 Contains middleware for protecting routes, checking user authentication, and redirecting as needed.
 */
 
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server"
-import { NextResponse } from "next/server"
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-// Only protect the dashboard routes - other pages can be accessed without login
-const isProtectedRoute = createRouteMatcher(["/dashboard(.*)"])
+// Define routes that should be public
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/products',
+  '/product/(.*)',
+  '/search',
+  '/about', 
+  '/api/webhooks/polar',
+  '/login',
+  '/signup',
+  '/success'
+]);
 
-export default clerkMiddleware(async (auth, req) => {
-  const { userId, redirectToSignIn } = await auth()
-
-  // If the user isn't signed in and the route is private, redirect to sign-in
-  if (!userId && isProtectedRoute(req)) {
-    return redirectToSignIn({ returnBackUrl: "/login" })
+export default clerkMiddleware((auth, req) => {
+  if (!isPublicRoute(req)) {
+    auth.protect();
   }
-
-  // If the user is logged in and the route is protected, let them view.
-  if (userId && isProtectedRoute(req)) {
-    return NextResponse.next()
-  }
-})
+});
 
 export const config = {
-  matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"]
-} 
+  // Protects all routes, including api/trpc.
+  // See https://clerk.com/docs/references/nextjs/auth-middleware
+  // for more information about configuring your middleware
+  matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api|trpc)(.*)'],
+}; 

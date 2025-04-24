@@ -1,0 +1,1 @@
+ALTER TYPE "public"."purchase_status" RENAME TO "purchase_status_v2";

@@ -380,6 +380,76 @@
 - Triggering AI/PDF generation via Polar webhooks.
 - Building a custom, Clerk-authenticated dashboard separate from the main purchase flow.
 
+## 11. Drizzle Migration Strategies
+
+### 11.1 Enum Type Handling Best Practices
+
+Database schema evolution, especially when working with PostgreSQL enum types in Drizzle, requires careful handling to avoid migration issues. Based on practical implementation experience, here are the key strategies:
+
+- **Avoid Direct Enum Value Additions in Schema Files**:
+  - Don't simply add new enum values to the schema definition and run a standard migration.
+  - This approach often leads to "enum value already exists" errors or duplicate migration attempts.
+  
+- **Two-Phase Enum Updates**:
+  - **Phase 1**: Generate a dedicated migration that uses PostgreSQL's `ADD VALUE IF NOT EXISTS` syntax:
+    ```sql
+    DO $$ BEGIN
+      ALTER TYPE "purchase_status" ADD VALUE IF NOT EXISTS 'processing_missing_url';
+    EXCEPTION
+      WHEN duplicate_object THEN null;
+    END $$;
+    ```
+  - **Phase 2**: Only after the migration has successfully been applied, update the enum definition in the schema file.
+
+- **Prefer Enum Renaming Over Recreation**:
+  - When Drizzle generates a migration that asks whether to create a new enum or rename an existing one, choose the rename option when maintaining data integrity is important.
+  - Creating new enums requires complex column changes and data migration.
+
+- **Implement Status Fallbacks in Code**:
+  - Design application logic to gracefully handle missing enum values.
+  - When a new status concept is needed but migration issues prevent adding it:
+    ```typescript
+    // In webhook handler or similar code:
+    const status = url ? 'processing' : 'pending_scrape';
+    
+    // Robust logging to track special cases:
+    if (!url) {
+      console.warn(`⚠️ Purchase ${id} missing URL. Using 'pending_scrape' status.`);
+      // Notify admin of special condition
+    }
+    ```
+
+### 11.2 Webhook Robustness with Schema Constraints
+
+The Polar webhook handler needs special attention due to potential schema limitations:
+
+- **URL Handling Robustness**:
+  - Implement thorough validation and fallback mechanisms for cases where expected data (like URLs) may be missing.
+  - Use clear, visible logging that stands out when special handling is triggered.
+  - Include detailed admin notifications for important edge cases requiring attention.
+
+- **Two-Track Strategy**:
+  - **Immediate Solution**: Implement pragmatic code-level workarounds that use existing status values.
+  - **Future Refactoring**: Plan for proper schema updates when a maintenance window allows for careful migration testing.
+
+### 11.3 Migration Recovery Patterns
+
+If migrations become problematic or conflicts occur:
+
+- **Document Current State**:
+  - Record the actual schema state in production using database inspection tools.
+  - Identify differences between the expected schema and actual schema.
+
+- **Manual Testing**:
+  - Test critical SQL commands directly against development databases.
+  - For enum changes, verify syntax and behavior before applying to migration scripts.
+
+- **Migration Reset Options**:
+  - Consider using `drizzle-kit push` (with caution) to synchronize schema state without traditional migrations.
+  - In extreme cases, create a new baseline migration capturing the current production state.
+
+These strategies ensure robust database evolution, particularly when dealing with the complexities of PostgreSQL enum types in production systems.
+
 # Final Notes
 
 This specification details the hybrid approach, aiming to combine the strengths of the Next.js Commerce frontend, [Polar.sh](http://polar.sh/)'s backend simplicity/MoR benefits, and `o1-pro`'s robust patterns for custom logic, DB, and auth. The core challenges lie in adapting the cart state and ensuring seamless data flow between the local state, Polar checkout, webhooks, Supabase, and Clerk.

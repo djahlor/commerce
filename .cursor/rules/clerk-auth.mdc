@@ -1,0 +1,239 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Clerk Authentication Patterns
+
+## Authentication Methods
+
+- **Choose the appropriate authentication method based on component type:**
+  - Use `auth()` from `@clerk/nextjs/server` in Server Components and Server Actions
+  - Use React hooks (`useUser`, `useAuth`) from `@clerk/nextjs` in Client Components
+  - Use middleware for global route protection
+
+```typescript
+// ✅ DO: Use server auth in Server Components
+import { auth } from '@clerk/nextjs/server';
+
+export default async function ServerComponent() {
+  const { userId } = await auth();
+  // ...
+}
+
+// ✅ DO: Use hooks in Client Components
+"use client"
+import { useUser } from '@clerk/nextjs';
+
+export default function ClientComponent() {
+  const { user, isLoaded } = useUser();
+  // ...
+}
+```
+
+## Component Structure
+
+- **Always handle loading and unauthenticated states in client components**
+  - Check `isLoaded` first to prevent flashing content
+  - Handle the case when user is not authenticated
+  - Use `redirect('/login')` for pages that require authentication
+
+```typescript
+// ✅ DO: Handle all states
+"use client"
+import { useUser } from '@clerk/nextjs';
+
+export default function ProfilePage() {
+  const { user, isLoaded } = useUser();
+  
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
+  
+  if (!user) {
+    return <div>Please sign in</div>;
+    // Or: redirect('/login');
+  }
+  
+  return <div>Welcome, {user.firstName}</div>;
+}
+
+// ❌ DON'T: Forget to handle loading state
+"use client"
+import { useUser } from '@clerk/nextjs';
+
+export default function BadExample() {
+  const { user } = useUser(); // Missing isLoaded check!
+  
+  if (!user) {
+    return <div>Please sign in</div>;
+  }
+  
+  return <div>Welcome, {user.firstName}</div>;
+}
+```
+
+## Middleware Configuration
+
+- **Use `createRouteMatcher` to define public routes**
+  - List all public routes explicitly
+  - Use patterns for dynamic routes
+  - Include API routes that need to remain public (like webhooks)
+
+```typescript
+// ✅ DO: Define public routes clearly
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/products',
+  '/api/webhooks/polar',
+  '/product/(.*)',
+]);
+
+export default clerkMiddleware((auth, req) => {
+  if (!isPublicRoute(req)) {
+    auth.protect();
+  }
+});
+```
+
+## Account Linking
+
+- **Implement a dedicated component for account linking**
+  - Use `useEffect` to trigger once after user is loaded
+  - Prevent multiple linking attempts with state tracking
+  - Handle errors gracefully
+  - Place in dashboard layout for automatic execution
+
+```typescript
+// ✅ DO: Create a dedicated AccountLinker component
+"use client"
+import { useUser } from '@clerk/nextjs';
+import { useEffect, useState } from 'react';
+
+export default function AccountLinker() {
+  const { user, isLoaded } = useUser();
+  const [hasLinked, setHasLinked] = useState(false);
+
+  useEffect(() => {
+    if (isLoaded && user && !hasLinked) {
+      linkAccounts();
+    }
+  }, [isLoaded, user, hasLinked]);
+  
+  // ...
+}
+```
+
+## Metadata Handling
+
+- **Separate metadata from client components**
+  - Create dedicated metadata files for routes with client components
+  - Next.js metadata API cannot be used in client components
+
+```typescript
+// ✅ DO: Create separate metadata files
+// app/(auth)/dashboard/metadata.tsx
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Dashboard',
+  description: 'Your account dashboard',
+};
+
+// app/(auth)/dashboard/page.tsx
+"use client"
+// Client component code...
+```
+
+## Conditional Rendering
+
+- **Use `SignedIn` and `SignedOut` components for conditional rendering**
+  - Prefer Clerk's built-in components over manual conditions
+  - Ensures correct reactivity to auth state changes
+
+```typescript
+// ✅ DO: Use Clerk's conditional components
+import { SignedIn, SignedOut } from '@clerk/nextjs';
+
+export default function Header() {
+  return (
+    <header>
+      <SignedIn>
+        <UserProfile />
+      </SignedIn>
+      <SignedOut>
+        <SignInButton />
+      </SignedOut>
+    </header>
+  );
+}
+
+// ❌ DON'T: Use manual conditions with hooks
+// This approach requires more boilerplate and can miss edge cases
+"use client"
+import { useAuth } from '@clerk/nextjs';
+
+export default function Header() {
+  const { isSignedIn, isLoaded } = useAuth();
+  
+  if (!isLoaded) return null;
+  
+  return (
+    <header>
+      {isSignedIn ? <UserProfile /> : <SignInButton />}
+    </header>
+  );
+}
+```
+
+## Error Handling
+
+- **Implement comprehensive error handling in auth-related actions**
+  - Use try/catch blocks around auth operations
+  - Return structured error responses
+  - Log errors for debugging
+  - Present user-friendly messages
+
+```typescript
+// ✅ DO: Implement proper error handling
+export async function authAction() {
+  try {
+    // Auth operation
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("Auth error:", error);
+    return { 
+      success: false, 
+      message: "Authentication failed. Please try again."
+    };
+  }
+}
+```
+
+## File Organization
+
+- **Group authentication-related components and routes**
+  - Use an `(auth)` route group for protected pages
+  - Keep auth components in dedicated directories
+  - Name auth-related server actions with clear prefixes
+
+```
+app/
+├── (auth)/               # Protected routes
+│   ├── dashboard/
+│   ├── login/
+│   └── signup/
+├── (marketing)/          # Public routes
+│   ├── products/
+│   └── about/
+components/
+├── auth/                 # Auth-related components
+│   ├── account-linker.tsx
+│   └── user-menu.tsx
+actions/
+├── clerk-actions.ts      # Clerk-specific actions
+└── db/
+    └── profiles-actions.ts
+```

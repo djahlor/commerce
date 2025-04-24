@@ -8,6 +8,28 @@ import { generatePDFAction } from '@/actions/pdf/pdf-actions';
 import { verifyWebhookSignature } from '@/lib/polar';
 import { NextRequest, NextResponse } from 'next/server';
 
+// URL validation regex
+const URL_REGEX = /^(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;
+
+// Function to potentially notify admins of missing URLs (placeholder for now)
+async function notifyAdminOfMissingUrl(orderId: string, email: string): Promise<void> {
+  // This would ideally send an email or Slack notification to admins
+  // For now, we'll just log it prominently
+  console.error(`
+    ⚠️⚠️⚠️ ADMIN NOTIFICATION ⚠️⚠️⚠️
+    Order ${orderId} is missing a required website URL
+    Customer email: ${email}
+    Action needed: Contact customer to request their website URL
+    ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+  `);
+  
+  // In a real implementation, this would call an email service
+  // await sendAdminNotificationEmail({
+  //   subject: `Missing URL - Order ${orderId}`,
+  //   message: `Customer with email ${email} did not provide a website URL for their order.`
+  // });
+}
+
 // Webhook handler for Polar.sh webhooks
 export async function POST(req: NextRequest) {
   try {
@@ -36,7 +58,7 @@ export async function POST(req: NextRequest) {
     if (event.type === 'order.succeeded') {
       // Extract order data from the event
       const order = event.data;
-      const { id: polarOrderId, email, total_amount, metadata } = order;
+      const { id: polarOrderId, email, total_amount, metadata, customer_note } = order;
       
       // Check if this order has already been processed (idempotency check)
       const existingPurchase = await getPurchaseByOrderIdAction(polarOrderId);
@@ -46,26 +68,66 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: 'Order already processed' }, { status: 200 });
       }
       
-      // Get the URL either directly from metadata or from the temp cart table
-      let url = metadata?.url || '';
+      // Get the URL from customer note (provided during checkout)
+      let url = '';
+      let urlSource = 'none';
+      let missingUrl = false;
       
-      // If tempCartId exists in metadata but no URL, retrieve from temp_carts table
-      if (!url && metadata?.tempCartId) {
+      // Extract the website URL from customer note
+      if (customer_note) {
+        // Use a simple regex to extract a URL from the customer note
+        const urlMatch = customer_note.match(/(https?:\/\/[^\s]+)/i);
+        if (urlMatch && urlMatch[0]) {
+          url = urlMatch[0];
+          urlSource = 'customer_note_regex';
+        } else {
+          // If no URL pattern found, use the entire note as it might be just the URL
+          const trimmedNote = customer_note.trim();
+          // Basic check if note looks like a URL
+          if (URL_REGEX.test(trimmedNote)) {
+            url = trimmedNote.startsWith('http') ? trimmedNote : `https://${trimmedNote}`;
+            urlSource = 'customer_note_full';
+          }
+        }
+      }
+      
+      // If URL is not in customer note but tempCartId exists in metadata,
+      // try retrieving from temp_carts table as fallback
+      if ((!url || !url.startsWith('http')) && metadata?.tempCartId) {
         try {
           const tempCartResult = await getTempCartByCartIdAction(metadata.tempCartId);
-          if (tempCartResult.isSuccess && tempCartResult.data) {
+          if (tempCartResult.isSuccess && tempCartResult.data && tempCartResult.data.url) {
             url = tempCartResult.data.url;
-            
-            // Cleanup the temp cart after successful retrieval
-            await deleteTempCartAction(metadata.tempCartId)
-              .catch(error => console.error(`Failed to delete temp cart ${metadata.tempCartId}:`, error));
-          } else {
-            console.error(`Failed to retrieve temp cart: ${tempCartResult.message}`);
+            urlSource = 'temp_cart';
           }
+          
+          // Cleanup the temp cart after retrieval regardless of URL presence
+          await deleteTempCartAction(metadata.tempCartId)
+            .catch(error => console.error(`Failed to delete temp cart ${metadata.tempCartId}:`, error));
         } catch (error) {
           console.error('Error retrieving temp cart data:', error);
         }
       }
+      
+      // Final validation and warning for missing URL
+      if (!url) {
+        missingUrl = true;
+        console.warn(`⚠️ No URL provided for order ${polarOrderId}. Using fallback empty URL.`);
+        url = ''; // Ensure it's an empty string, not undefined
+        urlSource = 'empty_fallback';
+        
+        // Flag for admin attention - don't block order processing
+        // This should eventually send an email or Slack notification to the team
+        notifyAdminOfMissingUrl(polarOrderId, email)
+          .catch(error => console.error('Failed to notify admin of missing URL:', error));
+      } else if (!url.startsWith('http')) {
+        console.warn(`⚠️ URL for order ${polarOrderId} is missing protocol. Adding https://`);
+        url = `https://${url}`;
+        urlSource = `${urlSource}_with_protocol_fix`;
+      }
+      
+      // Log URL source for debugging
+      console.log(`Order ${polarOrderId}: URL source = ${urlSource}, URL = ${url}`);
       
       // Determine the tier from the order (can be extracted based on your specific data structure)
       // This is a placeholder - adjust based on your actual order structure
@@ -78,7 +140,9 @@ export async function POST(req: NextRequest) {
         amount: total_amount,
         url,
         tier,
-        status: 'processing'
+        // Use existing enum values until we can properly add the new one
+        // Still flag missing URLs for admin attention via console logs
+        status: missingUrl ? 'pending_scrape' : 'processing'
       });
       
       if (!purchaseResult.isSuccess) {

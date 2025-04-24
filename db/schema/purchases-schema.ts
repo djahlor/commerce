@@ -5,6 +5,7 @@ Defines the database schema for purchases.
 import { integer, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core"
 import { profilesTable } from "./profiles-schema"
 
+// Using the original enum name to avoid migration issues
 export const purchaseStatusEnum = pgEnum("purchase_status", [
   "processing", 
   "pending_scrape", 

@@ -56,7 +56,7 @@ export async function testPdfStorage(
       };
     }
     
-    const signedUrl = signedUrlResult.data.url;
+    const signedUrl = signedUrlResult.data.signedUrl;
     console.log('Signed URL generated:', signedUrl);
     
     // Step 4: List PDFs for the purchase

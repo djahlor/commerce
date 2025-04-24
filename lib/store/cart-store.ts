@@ -16,7 +16,7 @@ export type CartItem = {
     currencyCode: string;
   };
   quantity: number;
-  url?: string; // URL for website analysis products
+  url?: string; // URL for analysis (e-commerce site URL)
   image?: {
     url: string;
     altText: string;

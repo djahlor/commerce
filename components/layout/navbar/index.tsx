@@ -3,6 +3,8 @@ import LogoSquare from 'components/logo-square';
 // Shopify imports removed in Step 8 - will be replaced with local config
 // import { getMenu } from 'lib/shopify';
 // import { Menu } from 'lib/shopify/types';
+import { Button } from '@/components/ui/button';
+import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { Menu } from 'lib/types';
 import Link from 'next/link';
 import { Suspense } from 'react';
@@ -66,7 +68,22 @@ export async function Navbar() {
             <Search />
           </Suspense>
         </div>
-        <div className="flex justify-end md:w-1/3">
+        <div className="flex items-center justify-end gap-3 md:w-1/3">
+          {/* Show UserButton with dashboard link when signed in */}
+          <SignedIn>
+            <Button variant="outline" asChild>
+              <Link href="/dashboard">Dashboard</Link>
+            </Button>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
+          
+          {/* Show Sign In button when signed out */}
+          <SignedOut>
+            <Button variant="outline" asChild>
+              <Link href="/login">Sign In</Link>
+            </Button>
+          </SignedOut>
+          
           <CartModal />
         </div>
       </div>

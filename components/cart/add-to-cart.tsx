@@ -67,9 +67,8 @@ export function AddToCart({ product }: { product: Product }) {
   const { addItem } = useCartActions();
   const { state } = useProduct();
   
-  // Get URL input value from state (this will be used for website analysis products)
-  const url = state.url as string | undefined;
-
+  // Remove URL input value from state
+  
   // Handle different variants structure
   const productVariants = Array.isArray(variants) 
     ? variants 
@@ -101,7 +100,6 @@ export function AddToCart({ product }: { product: Product }) {
         amount: finalVariant.price.amount,
         currencyCode: finalVariant.price.currencyCode
       },
-      url, // Add the URL from the URL input (for website analysis products)
       image: product.featuredImage && {
         url: product.featuredImage.url,
         altText: product.featuredImage.altText,

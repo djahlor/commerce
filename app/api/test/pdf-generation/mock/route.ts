@@ -279,7 +279,7 @@ export async function POST(request: Request) {
         return {
           type: output.type,
           path: output.filePath,
-          url: urlResult.isSuccess && urlResult.data ? urlResult.data.url : null,
+          url: urlResult.isSuccess && urlResult.data ? urlResult.data.signedUrl : null,
         };
       })
     );
